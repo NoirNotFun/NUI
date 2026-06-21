@@ -2,7 +2,9 @@
 	Library Owner: NoirNF
 	UI Engineer: NoirNF
 	Lua Scripter: NoirNF, Adono
-	... (giữ nguyên header)
+	Executor Compatibility Tester: Adono
+	Theme Creator: Adono
+	Animation Engineer: Adono
 ]]
 
 --Core
@@ -353,44 +355,6 @@ local function SetupBackground(frame, bgSetting, bgColor, defaultTransparency)
 end
 
 -- ============================================================
--- EFFECT: GRADIENT XOAY MƯỢT (Layer dưới cùng)
--- ============================================================
-local function CreateBorderGradient(borderFrame, colors, speed)
-    if not borderFrame then return nil end
-    
-    local gradient = Instance.new("UIGradient", borderFrame)
-    gradient.ZIndex = 0  -- Layer dưới cùng
-    
-    -- Tạo ColorSequence với 3 điểm màu (A -> B -> C -> A) để loop mượt
-    local colorKeypoints = {}
-    for i, color in ipairs(colors) do
-        local position = (i - 1) / (#colors - 1)
-        table.insert(colorKeypoints, ColorSequenceKeypoint.new(position, color))
-    end
-    -- Thêm màu đầu tiên ở cuối để loop không bị giật
-    table.insert(colorKeypoints, ColorSequenceKeypoint.new(1, colors[1]))
-    
-    gradient.Color = ColorSequence.new(colorKeypoints)
-    gradient.Transparency = NumberSequence.new(0)
-    gradient.Rotation = 0
-    
-    speed = speed or 120  -- Độ/giây
-    
-    -- Xoay liên tục
-    local connection
-    connection = RunService.RenderStepped:Connect(function(dt)
-        if not borderFrame or not borderFrame.Parent then
-            connection:Disconnect()
-            return
-        end
-        gradient.Rotation = (gradient.Rotation + dt * speed) % 360
-    end)
-    
-    table.insert(NoirUI.Connections, connection)
-    return gradient, connection
-end
-
--- ============================================================
 -- EFFECT: GLOW TEXT CHẠY NGANG
 -- ============================================================
 local function CreateGlowTextSlide(label, colors, speed)
@@ -434,15 +398,17 @@ function NoirUI:CreateWindow(settings)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
     
+    -- Chỉ lấy màu đầu tiên làm accent
     local accentColors = settings.AccentColors or {
-        Color3.fromRGB(0, 255, 255),
-        Color3.fromRGB(150, 0, 255),
-        Color3.fromRGB(255, 0, 255)
+        Color3.fromRGB(170, 85, 255)
     }
-    local accentSpeed = settings.AccentSpeed or 120
+    local ACCENT = accentColors[1] or Color3.fromRGB(170, 85, 255)
     local useGlow = settings.UseGlow ~= false
     
-    local ACCENT = accentColors[1] or Color3.fromRGB(170, 85, 255)
+    -- Float button settings
+    local floatSize = settings.FloatSize or 45
+    local floatIconSize = settings.FloatIconSize or 24
+    local floatCornerRadius = settings.FloatCornerRadius or 12
     
     local mainDefaultPos = settings.DefaultPosition or UDim2.new(0.5, -210, 0.5, -150)
     local floatDefaultPos = settings.FloatDefaultPosition or UDim2.new(0, 15, 0.5, -22)
@@ -455,13 +421,11 @@ function NoirUI:CreateWindow(settings)
     local BorderFrame = Instance.new("Frame", ScreenGui)
     BorderFrame.Size = UDim2.new(0, 424, 0, 304)
     BorderFrame.Position = mainDefaultPos
-    BorderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    BorderFrame.BackgroundColor3 = ACCENT
     BorderFrame.Visible = false
     BorderFrame.ZIndex = 0
     local borderCorner = Instance.new("UICorner", BorderFrame)
     borderCorner.CornerRadius = UDim.new(0, 12)
-    
-    CreateBorderGradient(BorderFrame, accentColors, accentSpeed)
     
     local Main = Instance.new("Frame", BorderFrame)
     Main.Size = UDim2.new(0, 420, 0, 300)
@@ -477,12 +441,10 @@ function NoirUI:CreateWindow(settings)
     local LoadingBorder = Instance.new("Frame", ScreenGui)
     LoadingBorder.Size = UDim2.new(0, 304, 0, 124)
     LoadingBorder.Position = UDim2.new(0.5, -152, 0.5, -62)
-    LoadingBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    LoadingBorder.BackgroundColor3 = ACCENT
     LoadingBorder.ZIndex = 199
     local loadingBorderCorner = Instance.new("UICorner", LoadingBorder)
     loadingBorderCorner.CornerRadius = UDim.new(0, 13)
-    
-    CreateBorderGradient(LoadingBorder, accentColors, accentSpeed)
     
     local LoadingFrame = Instance.new("Frame", LoadingBorder)
     LoadingFrame.Size = UDim2.new(0, 300, 0, 120)
@@ -611,12 +573,10 @@ function NoirUI:CreateWindow(settings)
             KUIBorder = Instance.new("Frame", ScreenGui)
             KUIBorder.Size = UDim2.new(0, 324, 0, 204)
             KUIBorder.Position = UDim2.new(0.5, -162, 0.5, -102)
-            KUIBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            KUIBorder.BackgroundColor3 = ACCENT
             KUIBorder.ZIndex = 50
             local kuibCorner = Instance.new("UICorner", KUIBorder)
             kuibCorner.CornerRadius = UDim.new(0, 13)
-            
-            CreateBorderGradient(KUIBorder, accentColors, accentSpeed)
             
             KUI = Instance.new("Frame", KUIBorder)
             KUI.Size = UDim2.new(0, 320, 0, 200)
@@ -785,12 +745,10 @@ function NoirUI:CreateWindow(settings)
         local ConfBorder = Instance.new("Frame", ScreenGui)
         ConfBorder.Size = UDim2.new(0, 264, 0, 124)
         ConfBorder.Position = UDim2.new(0.5, -132, 0.5, -62)
-        ConfBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ConfBorder.BackgroundColor3 = ACCENT
         ConfBorder.ZIndex = 100
         local confBorderCorner = Instance.new("UICorner", ConfBorder)
         confBorderCorner.CornerRadius = UDim.new(0, 13)
-        
-        CreateBorderGradient(ConfBorder, accentColors, accentSpeed)
         
         local Conf = Instance.new("Frame", ConfBorder)
         NoirUI.ActiveConfirmFrame = Conf
@@ -864,27 +822,6 @@ function NoirUI:CreateWindow(settings)
     SideStroke.Transparency = 0.7
     SideStroke.ZIndex = 1
     
-    local sideGradient = Instance.new("UIGradient", SideStroke)
-    local colorKeypoints = {}
-    for i, color in ipairs(accentColors) do
-        local position = (i - 1) / (#accentColors - 1)
-        table.insert(colorKeypoints, ColorSequenceKeypoint.new(position, color))
-    end
-    table.insert(colorKeypoints, ColorSequenceKeypoint.new(1, accentColors[1]))
-    sideGradient.Color = ColorSequence.new(colorKeypoints)
-    sideGradient.Transparency = NumberSequence.new(0)
-    sideGradient.Rotation = 0
-    
-    local sideRotateConnection
-    sideRotateConnection = RunService.RenderStepped:Connect(function(dt)
-        if not SideStroke or not SideStroke.Parent then
-            sideRotateConnection:Disconnect()
-            return
-        end
-        sideGradient.Rotation = (sideGradient.Rotation + dt * accentSpeed * 0.5) % 360
-    end)
-    table.insert(NoirUI.Connections, sideRotateConnection)
-    
     local TScroll = Instance.new("ScrollingFrame", Side)
     TScroll.Size = UDim2.new(1, 0, 1, -55)
     TScroll.Position = UDim2.new(0, 0, 0, 0)
@@ -920,27 +857,6 @@ function NoirUI:CreateWindow(settings)
     local avatarStroke = Instance.new("UIStroke", AI)
     avatarStroke.Color = ACCENT
     
-    local avatarGradient = Instance.new("UIGradient", avatarStroke)
-    local avatarKeypoints = {}
-    for i, color in ipairs(accentColors) do
-        local position = (i - 1) / (#accentColors - 1)
-        table.insert(avatarKeypoints, ColorSequenceKeypoint.new(position, color))
-    end
-    table.insert(avatarKeypoints, ColorSequenceKeypoint.new(1, accentColors[1]))
-    avatarGradient.Color = ColorSequence.new(avatarKeypoints)
-    avatarGradient.Transparency = NumberSequence.new(0)
-    avatarGradient.Rotation = 0
-    
-    local avatarRotateConnection
-    avatarRotateConnection = RunService.RenderStepped:Connect(function(dt)
-        if not avatarStroke or not avatarStroke.Parent then
-            avatarRotateConnection:Disconnect()
-            return
-        end
-        avatarGradient.Rotation = (avatarGradient.Rotation + dt * accentSpeed * 0.5) % 360
-    end)
-    table.insert(NoirUI.Connections, avatarRotateConnection)
-    
     -- CONTENT
     local Cont = Instance.new("Frame", Main)
     Cont.Size = UDim2.new(1, -125, 1, -50)
@@ -957,40 +873,20 @@ function NoirUI:CreateWindow(settings)
     ContStroke.Transparency = 0.7
     ContStroke.ZIndex = 1
     
-    local contGradient = Instance.new("UIGradient", ContStroke)
-    local contKeypoints = {}
-    for i, color in ipairs(accentColors) do
-        local position = (i - 1) / (#accentColors - 1)
-        table.insert(contKeypoints, ColorSequenceKeypoint.new(position, color))
-    end
-    table.insert(contKeypoints, ColorSequenceKeypoint.new(1, accentColors[1]))
-    contGradient.Color = ColorSequence.new(contKeypoints)
-    contGradient.Transparency = NumberSequence.new(0)
-    contGradient.Rotation = 0
-    
-    local contRotateConnection
-    contRotateConnection = RunService.RenderStepped:Connect(function(dt)
-        if not ContStroke or not ContStroke.Parent then
-            contRotateConnection:Disconnect()
-            return
-        end
-        contGradient.Rotation = (contGradient.Rotation + dt * accentSpeed * 0.5) % 360
-    end)
-    table.insert(NoirUI.Connections, contRotateConnection)
-    
-    -- FLOAT BUTTON
+    -- ============================================================
+    -- FLOAT BUTTON (Có thể tùy chỉnh kích thước)
+    -- ============================================================
+    local floatBorderSize = floatSize + 4
     local floatBorder = Instance.new("Frame", ScreenGui)
-    floatBorder.Size = UDim2.new(0, 49, 0, 49)
+    floatBorder.Size = UDim2.new(0, floatBorderSize, 0, floatBorderSize)
     floatBorder.Position = UDim2.new(floatDefaultPos.X.Scale, floatDefaultPos.X.Offset - 2, floatDefaultPos.Y.Scale, floatDefaultPos.Y.Offset - 2)
-    floatBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    floatBorder.BackgroundColor3 = ACCENT
     floatBorder.ZIndex = 9
     local floatBorderCorner = Instance.new("UICorner", floatBorder)
-    floatBorderCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius and settings.FloatCornerRadius + 2 or 14)
-    
-    CreateBorderGradient(floatBorder, accentColors, accentSpeed)
+    floatBorderCorner.CornerRadius = UDim.new(0, floatCornerRadius + 2)
     
     local TBtn = Instance.new("ImageButton", floatBorder)
-    TBtn.Size = UDim2.new(0, 45, 0, 45)
+    TBtn.Size = UDim2.new(0, floatSize, 0, floatSize)
     TBtn.Position = UDim2.new(0, 2, 0, 2)
     TBtn.BackgroundTransparency = 1
     TBtn.Image = ""
@@ -998,7 +894,7 @@ function NoirUI:CreateWindow(settings)
     TBtn.ClipsDescendants = true
 
     local floatCorner = Instance.new("UICorner", TBtn)
-    floatCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+    floatCorner.CornerRadius = UDim.new(0, floatCornerRadius)
 
     local ClipGroup = Instance.new("Frame", TBtn)
     ClipGroup.Name = "ClipGroup"
@@ -1009,7 +905,7 @@ function NoirUI:CreateWindow(settings)
     ClipGroup.ZIndex = TBtn.ZIndex
 
     local clipCorner = Instance.new("UICorner", ClipGroup)
-    clipCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+    clipCorner.CornerRadius = UDim.new(0, floatCornerRadius)
 
     if settings.FloatBackground and settings.FloatBackground.Image then
         local bgImage = Instance.new("ImageLabel", ClipGroup)
@@ -1029,7 +925,7 @@ function NoirUI:CreateWindow(settings)
         end
         
         local bgCorner = Instance.new("UICorner", bgImage)
-        bgCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+        bgCorner.CornerRadius = UDim.new(0, floatCornerRadius)
 
         local overlay = Instance.new("Frame", ClipGroup)
         overlay.Size = UDim2.new(1, 0, 1, 0)
@@ -1038,7 +934,7 @@ function NoirUI:CreateWindow(settings)
         overlay.ZIndex = 2
         
         local overlayCorner = Instance.new("UICorner", overlay)
-        overlayCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+        overlayCorner.CornerRadius = UDim.new(0, floatCornerRadius)
     else
         local bgColor = Instance.new("Frame", ClipGroup)
         bgColor.Size = UDim2.new(1, 0, 1, 0)
@@ -1047,7 +943,7 @@ function NoirUI:CreateWindow(settings)
         bgColor.ZIndex = 1
         
         local bgCorner = Instance.new("UICorner", bgColor)
-        bgCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+        bgCorner.CornerRadius = UDim.new(0, floatCornerRadius)
     end
 
     local iconValue = settings.Icon
@@ -1055,13 +951,8 @@ function NoirUI:CreateWindow(settings)
         local iconImage = ResolveIcon(iconValue)
         if iconImage then
             local FI = Instance.new("ImageLabel", ClipGroup)
-            if settings.FloatIconSize then
-                FI.Size = UDim2.new(0, settings.FloatIconSize, 0, settings.FloatIconSize)
-                FI.Position = UDim2.new(0.5, -settings.FloatIconSize/2, 0.5, -settings.FloatIconSize/2)
-            else
-                FI.Size = UDim2.new(0, 24, 0, 24)
-                FI.Position = UDim2.new(0.5, -12, 0.5, -12)
-            end
+            FI.Size = UDim2.new(0, floatIconSize, 0, floatIconSize)
+            FI.Position = UDim2.new(0.5, -floatIconSize/2, 0.5, -floatIconSize/2)
             FI.BackgroundTransparency = 1
             FI.Image = iconImage
             FI.ImageColor3 = Color3.new(1, 1, 1)
@@ -1069,7 +960,7 @@ function NoirUI:CreateWindow(settings)
             FI.ZIndex = 3
             
             local iconCorner = Instance.new("UICorner", FI)
-            iconCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+            iconCorner.CornerRadius = UDim.new(0, floatCornerRadius)
         elseif type(iconValue) == "string" then
             local textIcon = Instance.new("TextLabel", ClipGroup)
             textIcon.Size = UDim2.new(1, 0, 1, 0)
@@ -1077,13 +968,13 @@ function NoirUI:CreateWindow(settings)
             textIcon.BackgroundTransparency = 1
             textIcon.Text = iconValue
             textIcon.TextColor3 = Color3.new(1, 1, 1)
-            textIcon.TextSize = 28
+            textIcon.TextSize = floatSize * 0.6
             textIcon.Font = Enum.Font.GothamBold
             textIcon.TextScaled = true
             textIcon.ZIndex = 3
             
             local textCorner = Instance.new("UICorner", textIcon)
-            textCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+            textCorner.CornerRadius = UDim.new(0, floatCornerRadius)
         end
     end
 
@@ -1151,12 +1042,10 @@ function NoirUI:CreateWindow(settings)
         local nBorder = Instance.new("Frame", ScreenGui)
         nBorder.Size = UDim2.new(0, 264, 0, 69)
         nBorder.Position = UDim2.new(1, 20, 0.8, 0)
-        nBorder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        nBorder.BackgroundColor3 = ACCENT
         nBorder.ZIndex = 300
         local nBorderCorner = Instance.new("UICorner", nBorder)
         nBorderCorner.CornerRadius = UDim.new(0, 9)
-        
-        CreateBorderGradient(nBorder, accentColors, accentSpeed)
         
         local n = Instance.new("Frame", nBorder)
         n.Size = UDim2.new(0, 260, 0, 65)
@@ -1245,14 +1134,14 @@ function NoirUI:CreateWindow(settings)
         B.BackgroundTransparency = 0.7
         B.Text = ""
         B.ZIndex = 2
-        B.AutoButtonColor = false  -- Tắt hiệu ứng mờ
+        B.AutoButtonColor = false
         Instance.new("UICorner", B).CornerRadius = UDim.new(0, 6)
         
         -- Stroke cho tab khi được chọn
         local tabStroke = Instance.new("UIStroke", B)
         tabStroke.Color = ACCENT
         tabStroke.Thickness = 2
-        tabStroke.Transparency = 1  -- Mặc định ẩn
+        tabStroke.Transparency = 1
         tabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         tabStroke.ZIndex = 2
         
@@ -1342,7 +1231,6 @@ function NoirUI:CreateWindow(settings)
         SearchBox.TextSize = 12
         SearchBox.ClearTextOnFocus = false
         
-        -- Content Frame chứa các element
         local ContentFrame = Instance.new("Frame", TabContainer)
         ContentFrame.Size = UDim2.new(1, 0, 0, 0)
         ContentFrame.Position = UDim2.new(0, 0, 0, 45)
@@ -1359,7 +1247,6 @@ function NoirUI:CreateWindow(settings)
         end
         ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
         
-        -- Reset tất cả tab
         local function resetAllTabs()
             for _, v in pairs(TScroll:GetChildren()) do
                 if v:IsA("TextButton") then
@@ -1381,7 +1268,7 @@ function NoirUI:CreateWindow(settings)
             resetAllTabs()
             TabContainer.Visible = true
             BT.TextColor3 = ACCENT
-            tabStroke.Transparency = 0  -- Hiện stroke khi chọn
+            tabStroke.Transparency = 0
             local tabImg = B:FindFirstChild("ImageLabel")
             if tabImg then tabImg.ImageColor3 = Color3.fromRGB(150, 150, 150) end
             updateCanvas()
@@ -1451,7 +1338,6 @@ function NoirUI:CreateWindow(settings)
             s.ClipsDescendants = true
             table.insert(Tab.Elements, s)
             
-            -- Header (có thể click)
             local headerBtn = Instance.new("TextButton", s)
             headerBtn.Size = UDim2.new(1, 0, 0, 25)
             headerBtn.Position = UDim2.new(0, 0, 0, 0)
@@ -1479,7 +1365,6 @@ function NoirUI:CreateWindow(settings)
                 }, 1.2)
             end
             
-            -- Mũi tên
             local arrow = Instance.new("TextLabel", headerBtn)
             arrow.Size = UDim2.new(0, 20, 1, 0)
             arrow.Position = UDim2.new(1, -25, 0, 0)
@@ -1493,7 +1378,6 @@ function NoirUI:CreateWindow(settings)
             arrow.ZIndex = 2
             arrow.Name = "Arrow"
             
-            -- Container chứa element bên trong section
             local sectionContent = Instance.new("Frame", s)
             sectionContent.Size = UDim2.new(1, 0, 0, 0)
             sectionContent.Position = UDim2.new(0, 0, 0, 25)
@@ -1756,7 +1640,7 @@ function NoirUI:CreateWindow(settings)
             local fill = Instance.new("Frame", sbg)
             local percent = (defaultValue - min) / (max - min)
             fill.Size = UDim2.new(percent, 0, 1, 0)
-            fill.BackgroundColor3 = ACCENT  -- Chỉ lấy màu đầu tiên
+            fill.BackgroundColor3 = ACCENT
             fill.ZIndex = 2
             Instance.new("UICorner", fill)
             
@@ -2178,8 +2062,7 @@ function NoirUI:CreateWindow(settings)
         return Tab
     end
     
-    Window._accentColors = accentColors
-    Window._accentSpeed = accentSpeed
+    Window._accentColor = ACCENT
     Window._useGlow = useGlow
     
     return Window
