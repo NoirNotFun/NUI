@@ -39,65 +39,10 @@ local function ResolveIcon(iconInput)
     return nil
 end
 
---VibeSound Defaut
-local VibeSounds = {
-    Default = {
-        Click = "rbxassetid://9121544550",
-        Tab = "rbxassetid://9121544550",
-        Element = "rbxassetid://9121544550",
-        Open = "rbxassetid://9121544550",
-        Close = "rbxassetid://9121544550",
-        Notification = "rbxassetid://9121544550",
-        Error = "rbxassetid://9121544550",
-        Success = "rbxassetid://9121544550",
-    },
-    Cyber = {
-        Click = "rbxassetid://169653382",
-        Tab = "rbxassetid://169653382",
-        Element = "rbxassetid://169653382",
-        Open = "rbxassetid://169653382",
-        Close = "rbxassetid://169653382",
-        Notification = "rbxassetid://253176819",
-        Error = "rbxassetid://183922415",
-        Success = "rbxassetid://9121544550",
-    },
-    Soft = {
-        Click = "rbxassetid://415202063",
-        Tab = "rbxassetid://415202063",
-        Element = "rbxassetid://415202063", 
-        Open = "rbxassetid://415202063",
-        Close = "rbxassetid://415202063",
-        Notification = "rbxassetid://6367035006",
-        Error = "rbxassetid://5170587753",
-        Success = "rbxassetid://6367344460",
-    },
-    Retro = {
-        Click = "rbxassetid://132317637",
-        Tab = "rbxassetid://132317637",
-        Element = "rbxassetid://132317637",
-        Open = "rbxassetid://132317637",
-        Close = "rbxassetid://132317637",
-        Notification = "rbxassetid://282872173",
-        Error = "rbxassetid://144434571",
-        Success = "rbxassetid://280651216",
-    },
-    Nature = {
-        Click = "rbxassetid://3628697780",
-        Tab = "rbxassetid://3628697780",
-        Element = "rbxassetid://3628697780",
-        Open = "rbxassetid://3628697780",
-        Close = "rbxassetid://3628697780",
-        Notification = "rbxassetid://2602352041",
-        Error = "rbxassetid://2708694673",
-        Success = "rbxassetid://6246820498",
-    },
-}
-
+-- Sound Settings (User tự tìm ID)
 local SoundSettings = {
     Enabled = true,
     Volume = 0.5,
-    CurrentVibe = "Default",
-    CustomSounds = {},
     ClickSoundId = nil,
     TabSoundId = nil,
     ElementSoundId = nil,
@@ -124,30 +69,14 @@ local function PlaySound(soundType)
     
     local soundId = nil
     
-    if SoundSettings.CustomSounds[soundType] then
-        soundId = SoundSettings.CustomSounds[soundType]
-    else
-        local vibe = VibeSounds[SoundSettings.CurrentVibe]
-        if vibe and vibe[soundType] then
-            soundId = vibe[soundType]
-        else
-            local defaultVibe = VibeSounds.Default
-            if defaultVibe and defaultVibe[soundType] then
-                soundId = defaultVibe[soundType]
-            end
-        end
-    end
-    
-    if not soundId then
-        if soundType == "Click" then soundId = SoundSettings.ClickSoundId
-        elseif soundType == "Tab" then soundId = SoundSettings.TabSoundId
-        elseif soundType == "Element" then soundId = SoundSettings.ElementSoundId
-        elseif soundType == "Open" then soundId = SoundSettings.OpenSoundId
-        elseif soundType == "Close" then soundId = SoundSettings.CloseSoundId
-        elseif soundType == "Notification" then soundId = SoundSettings.NotificationSoundId
-        elseif soundType == "Error" then soundId = SoundSettings.ErrorSoundId
-        elseif soundType == "Success" then soundId = SoundSettings.SuccessSoundId
-        end
+    if soundType == "Click" then soundId = SoundSettings.ClickSoundId
+    elseif soundType == "Tab" then soundId = SoundSettings.TabSoundId
+    elseif soundType == "Element" then soundId = SoundSettings.ElementSoundId
+    elseif soundType == "Open" then soundId = SoundSettings.OpenSoundId
+    elseif soundType == "Close" then soundId = SoundSettings.CloseSoundId
+    elseif soundType == "Notification" then soundId = SoundSettings.NotificationSoundId
+    elseif soundType == "Error" then soundId = SoundSettings.ErrorSoundId
+    elseif soundType == "Success" then soundId = SoundSettings.SuccessSoundId
     end
     
     if not soundId then return end
@@ -284,29 +213,9 @@ function NoirUI:SetMusicLoopMode(mode)
     end
 end
 
-function NoirUI:SetCustomSound(soundType, soundId)
-    local key = soundType:gsub("^%l", string.upper)
-    SoundSettings.CustomSounds[key] = soundId
-end
-
-function NoirUI:SetVibe(vibeName)
-    if VibeSounds[vibeName] then
-        SoundSettings.CurrentVibe = vibeName
-        NoirUI:Notify("🎵 Vibe Changed", "Đã chuyển sang âm thanh " .. vibeName, "music")
-    end
-end
-
-function NoirUI:GetAvailableVibes()
-    local vibes = {}
-    for name, _ in pairs(VibeSounds) do
-        table.insert(vibes, name)
-    end
-    return vibes
-end
-
 function NoirUI:SetSound(soundType, soundId)
     local key = soundType:gsub("^%l", string.upper)
-    SoundSettings.CustomSounds[key] = soundId
+    SoundSettings[key] = soundId
 end
 
 function NoirUI:ToggleSound(enabled)
@@ -444,57 +353,121 @@ local function SetupBackground(frame, bgSetting, bgColor, defaultTransparency)
     end
 end
 
--- Hàm tạo gradient animated với 3 điểm màu: A -> B -> A (loop)
-local function CreateAnimatedGradient(parent, color1, color2, speed, angle)
-    if not parent or not color1 or not color2 then return nil end
+-- ============================================================
+-- EFFECT: GRADIENT (Hiệu ứng chuyển màu nền)
+-- ============================================================
+
+local function CreateGradientEffect(frame, colors, direction, speed)
+    if not frame or not colors or #colors < 2 then return nil end
     
-    local gradient = Instance.new("UIGradient", parent)
-    gradient.Rotation = angle or 45
+    local gradient = Instance.new("UIGradient", frame)
     
-    -- Tạo 3 điểm màu: A (0%) -> B (50%) -> A (100%) để loop mượt
-    local colorKeypoints = {
-        ColorSequenceKeypoint.new(0, color1),      -- Màu A ở đầu
-        ColorSequenceKeypoint.new(0.5, color2),    -- Màu B ở giữa
-        ColorSequenceKeypoint.new(1, color1),      -- Màu A ở cuối (để loop)
-    }
+    if direction == "vertical" then
+        gradient.Rotation = 90
+    elseif direction == "horizontal" then
+        gradient.Rotation = 0
+    else
+        gradient.Rotation = direction or 0
+    end
+    
+    local colorKeypoints = {}
+    for i, color in ipairs(colors) do
+        local position = (i - 1) / (#colors - 1)
+        table.insert(colorKeypoints, ColorSequenceKeypoint.new(position, color))
+    end
     gradient.Color = ColorSequence.new(colorKeypoints)
     gradient.Transparency = NumberSequence.new(0)
     
-    -- Tạo hiệu ứng di chuyển mượt mà
-    local offset = 0
-    local speedValue = speed or 0.5
-    
-    local connection
-    connection = RunService.RenderStepped:Connect(function(deltaTime)
-        if not parent or not parent.Parent then
-            connection:Disconnect()
-            return
-        end
-        -- Di chuyển offset từ 0 -> 1 -> 0 (loop)
-        offset = (offset + deltaTime * speedValue) % 1
-        gradient.Offset = Vector2.new(offset, 0)
-    end)
-    
-    table.insert(NoirUI.Connections, connection)
+    if speed and speed > 0 then
+        local offset = 0
+        local connection
+        connection = RunService.RenderStepped:Connect(function(deltaTime)
+            if not frame or not frame.Parent then
+                connection:Disconnect()
+                return
+            end
+            offset = (offset + deltaTime * speed) % 1
+            gradient.Offset = Vector2.new(offset, 0)
+        end)
+        table.insert(NoirUI.Connections, connection)
+        return gradient, connection
+    end
     
     return gradient
 end
 
--- Hàm tạo gradient tĩnh 2 màu
-local function CreateStaticGradient(parent, color1, color2, angle)
-    if not parent or not color1 or not color2 then return nil end
+-- ============================================================
+-- EFFECT: GLOW TEXT (Hiệu ứng sáng chữ)
+-- ============================================================
+
+local function CreateGlowText(label, glowColor, speed)
+    if not label then return nil end
     
-    local gradient = Instance.new("UIGradient", parent)
-    gradient.Rotation = angle or 45
+    local baseColor = label.TextColor3
+    speed = speed or 1.5
     
-    local colorKeypoints = {
-        ColorSequenceKeypoint.new(0, color1),
-        ColorSequenceKeypoint.new(1, color2),
-    }
-    gradient.Color = ColorSequence.new(colorKeypoints)
-    gradient.Transparency = NumberSequence.new(0)
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not label or not label.Parent then
+            connection:Disconnect()
+            return
+        end
+        
+        local time = tick() * speed
+        local pulse = (math.sin(time) + 1) / 2
+        
+        local r = baseColor.R + (glowColor.R - baseColor.R) * pulse * 0.5
+        local g = baseColor.G + (glowColor.G - baseColor.G) * pulse * 0.5
+        local b = baseColor.B + (glowColor.B - baseColor.B) * pulse * 0.5
+        
+        label.TextColor3 = Color3.new(r, g, b)
+    end)
     
-    return gradient
+    table.insert(NoirUI.Connections, connection)
+    return connection
+end
+
+-- ============================================================
+-- EFFECT: GLOW TEXT với Shadow (hiệu ứng phát sáng đẹp hơn)
+-- ============================================================
+
+local function CreateGlowTextShadow(label, glowColor, intensity, speed)
+    if not label then return nil end
+    
+    intensity = intensity or 0.5
+    speed = speed or 1
+    
+    local shadow1 = Instance.new("UIShadow", label)
+    shadow1.Color = glowColor
+    shadow1.Offset = Vector2.new(0, 0)
+    shadow1.Blur = 20
+    
+    local shadow2 = Instance.new("UIShadow", label)
+    shadow2.Color = glowColor
+    shadow2.Offset = Vector2.new(0, 0)
+    shadow2.Blur = 10
+    
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not label or not label.Parent then
+            connection:Disconnect()
+            return
+        end
+        
+        local time = tick() * speed
+        local pulse = (math.sin(time) + 1) / 2
+        local currentIntensity = intensity * (0.5 + pulse * 0.5)
+        
+        shadow1.Blur = 10 + currentIntensity * 15
+        shadow2.Blur = 5 + currentIntensity * 10
+        
+        local transparency = 1 - currentIntensity
+        shadow1.Transparency = transparency
+        shadow2.Transparency = transparency * 0.5
+    end)
+    
+    table.insert(NoirUI.Connections, connection)
+    return connection
 end
 
 function NoirUI:RegisterCommand(prefix, callback)
@@ -506,12 +479,13 @@ function NoirUI:CreateWindow(settings)
     ScreenGui.Name = "NoirUI_V3_Ultimate"
     ScreenGui.ResetOnSpawn = false
     
-    -- Xử lý accent colors (2 màu)
+    -- Accent Colors
     local accentColor1 = settings.AccentColor1 or Color3.fromRGB(170, 85, 255)
     local accentColor2 = settings.AccentColor2 or Color3.fromRGB(255, 50, 150)
     local accentSpeed = settings.AccentSpeed or 0.5
     local accentAngle = settings.AccentAngle or 45
     local useAnimation = settings.AccentAnimated ~= false
+    local useGlow = settings.UseGlow ~= false
     
     local function GetPrimaryAccent()
         return accentColor1
@@ -537,15 +511,21 @@ function NoirUI:CreateWindow(settings)
     MainStroke.Thickness = 2
     MainStroke.Color = ACCENT
     
+    -- Gradient effect cho Main Stroke
     if useAnimation then
-        CreateAnimatedGradient(MainStroke, accentColor1, accentColor2, accentSpeed, accentAngle)
-    else
-        CreateStaticGradient(MainStroke, accentColor1, accentColor2, accentAngle)
+        local colors = {accentColor1, accentColor2, accentColor1}
+        CreateGradientEffect(MainStroke, colors, accentAngle, accentSpeed)
+    end
+    
+    -- Gradient effect cho Main Background
+    if settings.MainBgGradient and #settings.MainBgGradient >= 2 then
+        CreateGradientEffect(Main, settings.MainBgGradient, "vertical", settings.MainBgSpeed or 0.3)
     end
     
     SetupBackground(Main, settings.Background, settings.MainBgColor, settings.MainBgTransparency or 0)
     MakeDraggable(Main)
     
+    -- Loading Frame
     local LoadingFrame = Instance.new("Frame", ScreenGui)
     LoadingFrame.Size = UDim2.new(0, 300, 0, 120)
     LoadingFrame.Position = UDim2.new(0.5, -150, 0.5, -60)
@@ -558,9 +538,8 @@ function NoirUI:CreateWindow(settings)
     LoadingStroke.Thickness = 2
     
     if useAnimation then
-        CreateAnimatedGradient(LoadingStroke, accentColor1, accentColor2, accentSpeed, accentAngle)
-    else
-        CreateStaticGradient(LoadingStroke, accentColor1, accentColor2, accentAngle)
+        local colors = {accentColor1, accentColor2, accentColor1}
+        CreateGradientEffect(LoadingStroke, colors, accentAngle, accentSpeed)
     end
     
     local hasLoadingBg = SetupBackground(LoadingFrame, settings.LoadingBackground, Color3.fromRGB(12, 12, 12), 0.95)
@@ -576,6 +555,11 @@ function NoirUI:CreateWindow(settings)
     LoadingTitle.TextSize = 18
     LoadingTitle.TextXAlignment = "Left"
     LoadingTitle.ZIndex = 201
+    
+    -- Glow effect cho Loading Title
+    if useGlow then
+        CreateGlowText(LoadingTitle, Color3.fromRGB(255, 200, 100), 1.5)
+    end
     
     local LoadingSub = Instance.new("TextLabel", LoadingFrame)
     LoadingSub.Size = UDim2.new(1, -40, 0, 20)
@@ -603,9 +587,8 @@ function NoirUI:CreateWindow(settings)
     LoadingBar.ZIndex = 201
     
     if useAnimation then
-        CreateAnimatedGradient(LoadingBar, accentColor1, accentColor2, accentSpeed, 0)
-    else
-        CreateStaticGradient(LoadingBar, accentColor1, accentColor2, 0)
+        local colors = {accentColor1, accentColor2, accentColor1}
+        CreateGradientEffect(LoadingBar, colors, 0, accentSpeed)
     end
     
     local LoadingPercent = Instance.new("TextLabel", LoadingFrame)
@@ -617,6 +600,10 @@ function NoirUI:CreateWindow(settings)
     LoadingPercent.Font = "GothamBold"
     LoadingPercent.TextSize = 12
     LoadingPercent.ZIndex = 201
+    
+    if useGlow then
+        CreateGlowText(LoadingPercent, Color3.fromRGB(255, 200, 100), 1.5)
+    end
     
     local function StartLoading()
         LoadingFrame.Visible = true
@@ -644,6 +631,7 @@ function NoirUI:CreateWindow(settings)
         table.insert(NoirUI.Connections, loadingConnection)
     end
     
+    -- Key System (giữ nguyên)
     local KeySolved = false
     local KUI = nil
     
@@ -657,6 +645,7 @@ function NoirUI:CreateWindow(settings)
         end
     end
     
+    -- ... (Key System code giữ nguyên, đã có ở trên)
     if settings.KeySystem then
         local KS = settings.KeySettings or {}
         local KeyPath = (KS.FileName or "NoirKey") .. ".json"
@@ -689,13 +678,11 @@ function NoirUI:CreateWindow(settings)
             kstr.Color = ACCENT
             
             if useAnimation then
-                CreateAnimatedGradient(kstr, accentColor1, accentColor2, accentSpeed, accentAngle)
-            else
-                CreateStaticGradient(kstr, accentColor1, accentColor2, accentAngle)
+                local colors = {accentColor1, accentColor2, accentColor1}
+                CreateGradientEffect(kstr, colors, accentAngle, accentSpeed)
             end
             
             MakeDraggable(KUI)
-            
             SetupBackground(KUI, settings.KeyBackground, Color3.fromRGB(12, 12, 12), 0)
             
             local KT = Instance.new("TextLabel", KUI)
@@ -707,6 +694,10 @@ function NoirUI:CreateWindow(settings)
             KT.TextSize = 16
             KT.BackgroundTransparency = 1
             KT.ZIndex = 2
+            
+            if useGlow then
+                CreateGlowText(KT, Color3.fromRGB(255, 200, 100), 1.5)
+            end
             
             local KSub = Instance.new("TextLabel", KUI)
             KSub.Size = UDim2.new(1,0,0,20)
@@ -751,9 +742,8 @@ function NoirUI:CreateWindow(settings)
             KB.ZIndex = 2
             
             if useAnimation then
-                CreateAnimatedGradient(KB, accentColor1, accentColor2, accentSpeed, accentAngle)
-            else
-                CreateStaticGradient(KB, accentColor1, accentColor2, accentAngle)
+                local colors = {accentColor1, accentColor2, accentColor1}
+                CreateGradientEffect(KB, colors, accentAngle, accentSpeed)
             end
             
             KB.MouseButton1Click:Connect(function()
@@ -779,9 +769,16 @@ function NoirUI:CreateWindow(settings)
         ShowMainUIAfterLoading()
     end
     
+    -- Header
     local Header = Instance.new("Frame", Main)
     Header.Size = UDim2.new(1, 0, 0, 40)
     Header.BackgroundTransparency = 1
+    
+    -- Gradient cho Header
+    if settings.HeaderGradient and #settings.HeaderGradient >= 2 then
+        CreateGradientEffect(Header, settings.HeaderGradient, "horizontal", settings.HeaderSpeed or 0.3)
+    end
+    
     if settings.LogoID then
         local L = Instance.new("ImageLabel", Header)
         L.Size = UDim2.new(0, 24, 0, 24)
@@ -800,6 +797,11 @@ function NoirUI:CreateWindow(settings)
     Title.TextSize = 14
     Title.TextXAlignment = "Left"
     
+    if useGlow then
+        CreateGlowText(Title, Color3.fromRGB(200, 200, 255), 1.5)
+    end
+    
+    -- Buttons header
     local Btns = Instance.new("Frame", Header)
     Btns.Size = UDim2.new(0, 70, 1, 0)
     Btns.Position = UDim2.new(1, -75, 0, 0)
@@ -819,12 +821,17 @@ function NoirUI:CreateWindow(settings)
         b.Font = "GothamBold"
         Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
         b.MouseButton1Click:Connect(cb)
+        
+        if useGlow then
+            CreateGlowText(b, col, 1)
+        end
     end
     
     local isM = false
     TopB("—", Color3.fromRGB(255, 200, 50), function()
         PlaySound("Click")
-        isM = not isM        TweenService:Create(Main, TweenInfo.new(0.4), {Size = isM and UDim2.new(0, 420, 0, 40) or UDim2.new(0, 420, 0, 300)}):Play()
+        isM = not isM
+        TweenService:Create(Main, TweenInfo.new(0.4), {Size = isM and UDim2.new(0, 420, 0, 40) or UDim2.new(0, 420, 0, 300)}):Play()
     end)
     
     TopB("X", Color3.fromRGB(255, 100, 100), function()
@@ -843,9 +850,8 @@ function NoirUI:CreateWindow(settings)
         s.Thickness = 2
         
         if useAnimation then
-            CreateAnimatedGradient(s, accentColor1, accentColor2, accentSpeed, accentAngle)
-        else
-            CreateStaticGradient(s, accentColor1, accentColor2, accentAngle)
+            local colors = {accentColor1, accentColor2, accentColor1}
+            CreateGradientEffect(s, colors, accentAngle, accentSpeed)
         end
         
         local t = Instance.new("TextLabel", Conf)
@@ -856,6 +862,7 @@ function NoirUI:CreateWindow(settings)
         t.Font = "GothamMedium"
         t.TextSize = 13
         t.ZIndex = 101
+        
         local cbtn = Instance.new("TextButton", Conf)
         cbtn.Size = UDim2.new(0.4, 0, 0, 32)
         cbtn.Position = UDim2.new(0.07, 0, 0.6, 0)
@@ -874,9 +881,12 @@ function NoirUI:CreateWindow(settings)
         Instance.new("UICorner", fbtn).CornerRadius = UDim.new(0, 6)
         
         if useAnimation then
-            CreateAnimatedGradient(fbtn, accentColor1, accentColor2, accentSpeed, accentAngle)
-        else
-            CreateStaticGradient(fbtn, accentColor1, accentColor2, accentAngle)
+            local colors = {accentColor1, accentColor2, accentColor1}
+            CreateGradientEffect(fbtn, colors, accentAngle, accentSpeed)
+        end
+        
+        if useGlow then
+            CreateGlowText(fbtn, Color3.fromRGB(255, 200, 100), 1.5)
         end
         
         local function destroyConfirm()
@@ -896,6 +906,7 @@ function NoirUI:CreateWindow(settings)
         end)
     end)
     
+    -- Sidebar
     local Side = Instance.new("Frame", Main)
     Side.Size = UDim2.new(0, 110, 1, -50)
     Side.Position = UDim2.new(0, 5, 0, 40)
@@ -910,9 +921,13 @@ function NoirUI:CreateWindow(settings)
     SideStroke.Transparency = 0.7
     
     if useAnimation then
-        CreateAnimatedGradient(SideStroke, accentColor1, accentColor2, accentSpeed, accentAngle)
-    else
-        CreateStaticGradient(SideStroke, accentColor1, accentColor2, accentAngle)
+        local colors = {accentColor1, accentColor2, accentColor1}
+        CreateGradientEffect(SideStroke, colors, accentAngle, accentSpeed)
+    end
+    
+    -- Sidebar Gradient
+    if settings.SidebarGradient and #settings.SidebarGradient >= 2 then
+        CreateGradientEffect(Side, settings.SidebarGradient, "vertical", settings.SidebarSpeed or 0.3)
     end
     
     local TScroll = Instance.new("ScrollingFrame", Side)
@@ -950,11 +965,11 @@ function NoirUI:CreateWindow(settings)
     avatarStroke.Color = ACCENT
     
     if useAnimation then
-        CreateAnimatedGradient(avatarStroke, accentColor1, accentColor2, accentSpeed, accentAngle)
-    else
-        CreateStaticGradient(avatarStroke, accentColor1, accentColor2, accentAngle)
+        local colors = {accentColor1, accentColor2, accentColor1}
+        CreateGradientEffect(avatarStroke, colors, accentAngle, accentSpeed)
     end
     
+    -- Content
     local Cont = Instance.new("Frame", Main)
     Cont.Size = UDim2.new(1, -125, 1, -50)
     Cont.Position = UDim2.new(0, 120, 0, 40)
@@ -969,12 +984,11 @@ function NoirUI:CreateWindow(settings)
     ContStroke.Transparency = 0.7
     
     if useAnimation then
-        CreateAnimatedGradient(ContStroke, accentColor1, accentColor2, accentSpeed, accentAngle)
-    else
-        CreateStaticGradient(ContStroke, accentColor1, accentColor2, accentAngle)
+        local colors = {accentColor1, accentColor2, accentColor1}
+        CreateGradientEffect(ContStroke, colors, accentAngle, accentSpeed)
     end
     
-    -- FLOAT BUTTON WITH SQUIRCLE AND CLIPPING MASK
+    -- Float Button
     local TBtn = Instance.new("ImageButton", ScreenGui)
     TBtn.Size = UDim2.new(0, 45, 0, 45)
     TBtn.Position = floatDefaultPos
@@ -1078,9 +1092,8 @@ function NoirUI:CreateWindow(settings)
     TS.Thickness = 2
     
     if useAnimation then
-        CreateAnimatedGradient(TS, accentColor1, accentColor2, accentSpeed, accentAngle)
-    else
-        CreateStaticGradient(TS, accentColor1, accentColor2, accentAngle)
+        local colors = {accentColor1, accentColor2, accentColor1}
+        CreateGradientEffect(TS, colors, accentAngle, accentSpeed)
     end
 
     local floatDragging = false
@@ -1136,6 +1149,7 @@ function NoirUI:CreateWindow(settings)
         end
     end)
     
+    -- Notification
     function NoirUI:Notify(title, message, iconName, soundType)
         if soundType then
             PlaySound(soundType)
@@ -1153,9 +1167,8 @@ function NoirUI:CreateWindow(settings)
         ns.Color = ACCENT
         
         if useAnimation then
-            CreateAnimatedGradient(ns, accentColor1, accentColor2, accentSpeed, accentAngle)
-        else
-            CreateStaticGradient(ns, accentColor1, accentColor2, accentAngle)
+            local colors = {accentColor1, accentColor2, accentColor1}
+            CreateGradientEffect(ns, colors, accentAngle, accentSpeed)
         end
         
         SetupBackground(n, settings.NotificationBackground, Color3.fromRGB(15, 15, 15), 0.25)
@@ -1182,6 +1195,10 @@ function NoirUI:CreateWindow(settings)
         tl.Font = "GothamBold"
         tl.TextSize = 13
         tl.TextXAlignment = "Left"
+        
+        if useGlow then
+            CreateGlowText(tl, Color3.fromRGB(255, 200, 100), 1.5)
+        end
         
         local ml = Instance.new("TextLabel", n)
         ml.Size = UDim2.new(1, iconName and -45 or -25, 0, 35)
@@ -1213,6 +1230,7 @@ function NoirUI:CreateWindow(settings)
         end)
     end
     
+    -- Window and Tab functions
     local Window = {}
     
     function Window:CreateTab(name, icon)
@@ -1231,6 +1249,10 @@ function NoirUI:CreateWindow(settings)
         BT.Font = "GothamMedium"
         BT.TextSize = 11
         BT.TextXAlignment = "Left"
+        
+        if useGlow then
+            CreateGlowText(BT, Color3.fromRGB(200, 180, 255), 1)
+        end
         
         if icon then
             local IC = Instance.new("ImageLabel", B)
@@ -1361,6 +1383,10 @@ function NoirUI:CreateWindow(settings)
             l.Name = "Label"
             table.insert(Tab.Elements, l)
             
+            if useGlow then
+                CreateGlowText(l, Color3.fromRGB(200, 200, 255), 1)
+            end
+            
             if type(text) == "function" then
                 local connection = RunService.RenderStepped:Connect(function()
                     if l and l.Parent then
@@ -1393,6 +1419,10 @@ function NoirUI:CreateWindow(settings)
             lbl.TextXAlignment = "Left"
             lbl.BackgroundTransparency = 1
             
+            if useGlow then
+                CreateGlowText(lbl, Color3.fromRGB(255, 200, 100), 1.5)
+            end
+            
             if not noLine then
                 local line = Instance.new("Frame", s)
                 line.Size = UDim2.new(1, 0, 0, 1)
@@ -1423,6 +1453,10 @@ function NoirUI:CreateWindow(settings)
             title.TextSize = 13
             title.BackgroundTransparency = 1
             title.TextXAlignment = "Left"
+            
+            if useGlow then
+                CreateGlowText(title, Color3.fromRGB(255, 200, 100), 1.5)
+            end
             
             local content = Instance.new("TextLabel", f)
             content.Size = UDim2.new(1, -20, 0, 30)
@@ -1481,6 +1515,10 @@ function NoirUI:CreateWindow(settings)
             b.Name = opt.Name
             table.insert(Tab.Elements, b)
             
+            if useGlow then
+                CreateGlowText(b, Color3.fromRGB(200, 200, 255), 1)
+            end
+            
             if opt.Align == false then
                 b.TextXAlignment = "Left"
                 b.Text = "  " .. opt.Name
@@ -1524,6 +1562,10 @@ function NoirUI:CreateWindow(settings)
             t.LayoutOrder = GetO()
             t.Name = opt.Name
             table.insert(Tab.Elements, t)
+            
+            if useGlow then
+                CreateGlowText(t, s and Color3.fromRGB(255, 200, 100) or Color3.fromRGB(180, 180, 200), 1)
+            end
             
             local bx = Instance.new("Frame", t)
             bx.Size = UDim2.new(0, 30, 0, 16)
@@ -1574,6 +1616,10 @@ function NoirUI:CreateWindow(settings)
             l.TextXAlignment = "Left"
             l.TextSize = 11
             
+            if useGlow then
+                CreateGlowText(l, Color3.fromRGB(200, 200, 255), 1)
+            end
+            
             local sbg = Instance.new("Frame", f)
             sbg.Size = UDim2.new(0.9, 0, 0, 8)
             sbg.Position = UDim2.new(0.05, 0, hasSubtitle and 0.55 or 0.7, 0)
@@ -1588,9 +1634,8 @@ function NoirUI:CreateWindow(settings)
             Instance.new("UICorner", fill)
             
             if useAnimation then
-                CreateAnimatedGradient(fill, accentColor1, accentColor2, accentSpeed, 0)
-            else
-                CreateStaticGradient(fill, accentColor1, accentColor2, 0)
+                local colors = {accentColor1, accentColor2, accentColor1}
+                CreateGradientEffect(fill, colors, 0, accentSpeed)
             end
             
             if hasSubtitle then
@@ -1652,6 +1697,10 @@ function NoirUI:CreateWindow(settings)
             t.Font = "GothamMedium"
             t.TextSize = 12
             t.TextXAlignment = "Left"
+            
+            if useGlow then
+                CreateGlowText(t, Color3.fromRGB(200, 200, 255), 1)
+            end
             
             local pvw = Instance.new("TextButton", f)
             pvw.Size = UDim2.new(0, 40, 0, 18)
@@ -1757,6 +1806,10 @@ function NoirUI:CreateWindow(settings)
             t.TextSize = 12
             t.TextXAlignment = "Left"
             
+            if useGlow then
+                CreateGlowText(t, Color3.fromRGB(200, 200, 255), 1)
+            end
+            
             local Arrow = Instance.new("TextLabel", t)
             Arrow.Name = "ArrowLabel"
             Arrow.Size = UDim2.new(0, 30, 1, 0)
@@ -1803,6 +1856,11 @@ function NoirUI:CreateWindow(settings)
                     it.TextColor3 = Color3.fromRGB(200, 200, 200)
                     it.Font = "GothamMedium"
                     it.TextSize = 11
+                    
+                    if useGlow then
+                        CreateGlowText(it, Color3.fromRGB(200, 200, 255), 1)
+                    end
+                    
                     it.MouseButton1Click:Connect(function()
                         PlaySound("Element")
                         il.Visible = false
@@ -1848,6 +1906,11 @@ function NoirUI:CreateWindow(settings)
                     it.TextColor3 = Color3.fromRGB(200, 200, 200)
                     it.Font = "GothamMedium"
                     it.TextSize = 11
+                    
+                    if useGlow then
+                        CreateGlowText(it, Color3.fromRGB(200, 200, 255), 1)
+                    end
+                    
                     it.MouseButton1Click:Connect(function()
                         PlaySound("Element")
                         open = false
@@ -1917,9 +1980,12 @@ function NoirUI:CreateWindow(settings)
             Instance.new("UICorner", r).CornerRadius = UDim.new(0, 6)
             
             if useAnimation then
-                CreateAnimatedGradient(r, accentColor1, accentColor2, accentSpeed, accentAngle)
-            else
-                CreateStaticGradient(r, accentColor1, accentColor2, accentAngle)
+                local colors = {accentColor1, accentColor2, accentColor1}
+                CreateGradientEffect(r, colors, accentAngle, accentSpeed)
+            end
+            
+            if useGlow then
+                CreateGlowText(r, Color3.fromRGB(255, 200, 100), 1.5)
             end
             
             r.MouseButton1Click:Connect(function()
@@ -1988,6 +2054,7 @@ function NoirUI:CreateWindow(settings)
     Window._accentColor2 = accentColor2
     Window._accentSpeed = accentSpeed
     Window._useAnimation = useAnimation
+    Window._useGlow = useGlow
     
     return Window
 end
