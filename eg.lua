@@ -510,7 +510,7 @@ function NoirUI:CreateWindow(settings)
     local mainCorner = Instance.new("UICorner", Main)
     mainCorner.CornerRadius = UDim.new(0, 12)
     local MainStroke = Instance.new("UIStroke", Main)
-    MainStroke.Color = ACCENT  -- <-- QUAN TRỌNG: Gán màu cho stroke
+    MainStroke.Color = ACCENT
     MainStroke.Thickness = 2
     
     SetupBackground(Main, settings.Background, settings.MainBgColor, settings.MainBgTransparency or 0)
@@ -920,27 +920,29 @@ function NoirUI:CreateWindow(settings)
     ContStroke.Thickness = 1
     ContStroke.Transparency = 0.7
     
-    -- FLOAT BUTTON WITH SQUIRCLE AND CLIPPING MASK
-    local floatBorderSize = floatSize + 4
-    local floatBorder = Instance.new("Frame", ScreenGui)
-    floatBorder.Size = UDim2.new(0, floatBorderSize, 0, floatBorderSize)
-    floatBorder.Position = UDim2.new(floatDefaultPos.X.Scale, floatDefaultPos.X.Offset - 2, floatDefaultPos.Y.Scale, floatDefaultPos.Y.Offset - 2)
-    floatBorder.BackgroundColor3 = ACCENT
-    floatBorder.ZIndex = 9
-    local floatBorderCorner = Instance.new("UICorner", floatBorder)
-    floatBorderCorner.CornerRadius = UDim.new(0, floatCornerRadius + 2)
-    
-    local TBtn = Instance.new("ImageButton", floatBorder)
+    -- ============================================================
+    -- FLOAT BUTTON (Không có border frame riêng)
+    -- ============================================================
+    local TBtn = Instance.new("ImageButton", ScreenGui)
     TBtn.Size = UDim2.new(0, floatSize, 0, floatSize)
-    TBtn.Position = UDim2.new(0, 2, 0, 2)
-    TBtn.BackgroundTransparency = 1
+    TBtn.Position = floatDefaultPos
+    TBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    TBtn.BackgroundTransparency = 0
     TBtn.Image = ""
     TBtn.ZIndex = 10
     TBtn.ClipsDescendants = true
+    TBtn.AutoButtonColor = false
 
+    -- Corner cho float button
     local floatCorner = Instance.new("UICorner", TBtn)
     floatCorner.CornerRadius = UDim.new(0, floatCornerRadius)
 
+    -- Stroke cho float button (viền accent)
+    local floatStroke = Instance.new("UIStroke", TBtn)
+    floatStroke.Color = ACCENT
+    floatStroke.Thickness = 2
+
+    -- ClipGroup cho icon
     local ClipGroup = Instance.new("Frame", TBtn)
     ClipGroup.Name = "ClipGroup"
     ClipGroup.Size = UDim2.new(1, 0, 1, 0)
@@ -1023,11 +1025,6 @@ function NoirUI:CreateWindow(settings)
         end
     end
 
-    -- Stroke (border) for float button
-    local TS = Instance.new("UIStroke", TBtn)
-    TS.Color = ACCENT
-    TS.Thickness = 2
-
     local floatDragging = false
     local floatDragStart, floatStartPos, floatDragInput
     TBtn.InputBegan:Connect(function(input)
@@ -1045,9 +1042,7 @@ function NoirUI:CreateWindow(settings)
     UIS.InputChanged:Connect(function(input)
         if input == floatDragInput and floatDragging then
             local delta = input.Position - floatDragStart
-            local newPos = UDim2.new(floatStartPos.X.Scale, floatStartPos.X.Offset + delta.X, floatStartPos.Y.Scale, floatStartPos.Y.Offset + delta.Y)
-            TBtn.Position = newPos
-            floatBorder.Position = UDim2.new(newPos.X.Scale, newPos.X.Offset - 2, newPos.Y.Scale, newPos.Y.Offset - 2)
+            TBtn.Position = UDim2.new(floatStartPos.X.Scale, floatStartPos.X.Offset + delta.X, floatStartPos.Y.Scale, floatStartPos.Y.Offset + delta.Y)
         end
     end)
     UIS.InputEnded:Connect(function(input)
@@ -1574,8 +1569,7 @@ function NoirUI:CreateWindow(settings)
             
             b.MouseButton1Click:Connect(function()
                 PlaySound("Element")
-                if opt.Callback then opt.Callback() end
-            end)
+                if opt.Callback then opt.Callback() end            end)
             return b
         end
         
