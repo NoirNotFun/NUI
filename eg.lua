@@ -444,40 +444,6 @@ local function SetupBackground(frame, bgSetting, bgColor, defaultTransparency)
     end
 end
 
--- ============================================================
--- EFFECT: GLOW TEXT CHẠY NGANG
--- ============================================================
-local function CreateGlowTextSlide(label, colors, speed)
-    if not label then return nil end
-    
-    local gradient = Instance.new("UIGradient", label)
-    
-    local colorKeypoints = {}
-    for i, color in ipairs(colors) do
-        local position = (i - 1) / (#colors - 1)
-        table.insert(colorKeypoints, ColorSequenceKeypoint.new(position, color))
-    end
-    
-    gradient.Color = ColorSequence.new(colorKeypoints)
-    gradient.Transparency = NumberSequence.new(0)
-    gradient.Rotation = 30
-    
-    speed = speed or 1.5
-    
-    local connection
-    connection = RunService.RenderStepped:Connect(function(dt)
-        if not label or not label.Parent then
-            connection:Disconnect()
-            return
-        end
-        local offset = (tick() * speed) % 2 - 1
-        gradient.Offset = Vector2.new(offset, 0)
-    end)
-    
-    table.insert(NoirUI.Connections, connection)
-    return gradient, connection
-end
-
 function NoirUI:RegisterCommand(prefix, callback)
     NoirUI.CustomCommands[prefix:lower()] = callback
 end
@@ -920,29 +886,26 @@ function NoirUI:CreateWindow(settings)
     ContStroke.Thickness = 1
     ContStroke.Transparency = 0.7
     
-    -- ============================================================
-    -- FLOAT BUTTON (Không có border frame riêng)
-    -- ============================================================
-    local TBtn = Instance.new("ImageButton", ScreenGui)
+    -- FLOAT BUTTON
+    local floatBorder = Instance.new("Frame", ScreenGui)
+    floatBorder.Size = UDim2.new(0, floatSize + 4, 0, floatSize + 4)
+    floatBorder.Position = UDim2.new(floatDefaultPos.X.Scale, floatDefaultPos.X.Offset - 2, floatDefaultPos.Y.Scale, floatDefaultPos.Y.Offset - 2)
+    floatBorder.BackgroundColor3 = ACCENT
+    floatBorder.ZIndex = 9
+    local floatBorderCorner = Instance.new("UICorner", floatBorder)
+    floatBorderCorner.CornerRadius = UDim.new(0, floatCornerRadius + 2)
+    
+    local TBtn = Instance.new("ImageButton", floatBorder)
     TBtn.Size = UDim2.new(0, floatSize, 0, floatSize)
-    TBtn.Position = floatDefaultPos
-    TBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    TBtn.BackgroundTransparency = 0
+    TBtn.Position = UDim2.new(0, 2, 0, 2)
+    TBtn.BackgroundTransparency = 1
     TBtn.Image = ""
     TBtn.ZIndex = 10
     TBtn.ClipsDescendants = true
-    TBtn.AutoButtonColor = false
 
-    -- Corner cho float button
     local floatCorner = Instance.new("UICorner", TBtn)
     floatCorner.CornerRadius = UDim.new(0, floatCornerRadius)
 
-    -- Stroke cho float button (viền accent)
-    local floatStroke = Instance.new("UIStroke", TBtn)
-    floatStroke.Color = ACCENT
-    floatStroke.Thickness = 2
-
-    -- ClipGroup cho icon
     local ClipGroup = Instance.new("Frame", TBtn)
     ClipGroup.Name = "ClipGroup"
     ClipGroup.Size = UDim2.new(1, 0, 1, 0)
@@ -1025,6 +988,10 @@ function NoirUI:CreateWindow(settings)
         end
     end
 
+    local TS = Instance.new("UIStroke", TBtn)
+    TS.Color = ACCENT
+    TS.Thickness = 2
+
     local floatDragging = false
     local floatDragStart, floatStartPos, floatDragInput
     TBtn.InputBegan:Connect(function(input)
@@ -1042,7 +1009,9 @@ function NoirUI:CreateWindow(settings)
     UIS.InputChanged:Connect(function(input)
         if input == floatDragInput and floatDragging then
             local delta = input.Position - floatDragStart
-            TBtn.Position = UDim2.new(floatStartPos.X.Scale, floatStartPos.X.Offset + delta.X, floatStartPos.Y.Scale, floatStartPos.Y.Offset + delta.Y)
+            local newPos = UDim2.new(floatStartPos.X.Scale, floatStartPos.X.Offset + delta.X, floatStartPos.Y.Scale, floatStartPos.Y.Offset + delta.Y)
+            TBtn.Position = newPos
+            floatBorder.Position = UDim2.new(newPos.X.Scale, newPos.X.Offset - 2, newPos.Y.Scale, newPos.Y.Offset - 2)
         end
     end)
     UIS.InputEnded:Connect(function(input)
@@ -1569,7 +1538,8 @@ function NoirUI:CreateWindow(settings)
             
             b.MouseButton1Click:Connect(function()
                 PlaySound("Element")
-                if opt.Callback then opt.Callback() end            end)
+                if opt.Callback then opt.Callback() end
+            end)
             return b
         end
         
