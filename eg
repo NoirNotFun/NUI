@@ -17,7 +17,7 @@ local HttpService = game:GetService("HttpService")
 local OldGui = game.CoreGui:FindFirstChild("NoirUI_V3_Ultimate")
 if OldGui then OldGui:Destroy() end
 
-local NoirUI = { Notifications = {}, ActiveConfirmFrame = nil, CustomCommands = {}, Connections = {} }
+local NoirUI = { Notifications = {}, ActiveConfirmFrame = nil, CustomCommands = {}, Connections = {}, Glows = {} }
 
 local LucideIcons = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirGoodBoi/UI/refs/heads/main/icons.lua"))()
 
@@ -40,8 +40,6 @@ local function ResolveIcon(iconInput)
 end
 
 --VibeSound Defaut
---If you prefer, you can also use these pre-made VibeSounds :)
-
 local VibeSounds = {
     Default = {
         Click = "rbxassetid://9121544550",
@@ -340,9 +338,10 @@ function NoirUI:Destroy()
     NoirUI.Notifications = {}
     NoirUI.ActiveConfirmFrame = nil
     NoirUI.Connections = {}
+    NoirUI.Glows = {}
 end
 
--- HÀM TẠO GLOW TEXT
+-- HÀM TẠO GLOW TEXT - SÁNG HƠN
 local function CreateGlowTextSlide(label, colors, speed)
     if not label then return nil end
     
@@ -372,6 +371,55 @@ local function CreateGlowTextSlide(label, colors, speed)
     
     table.insert(NoirUI.Connections, connection)
     return gradient, connection
+end
+
+-- HÀM TẠO GLOW AURA CHO UI
+local function CreateUIGlow(frame, color, intensity, parent)
+    if not frame then return nil end
+    if not parent then parent = frame.Parent end
+    
+    -- Xóa glow cũ nếu có
+    local oldGlow = frame:FindFirstChild("_UIGlow")
+    if oldGlow then oldGlow:Destroy() end
+    
+    -- Tạo frame glow bên ngoài
+    local glow = Instance.new("Frame", parent)
+    glow.Name = "_UIGlow"
+    glow.Size = frame.Size + UDim2.new(0, 24, 0, 24)
+    glow.Position = frame.Position - UDim2.new(0, 12, 0, 12)
+    glow.BackgroundTransparency = 1
+    glow.ZIndex = frame.ZIndex - 1
+    glow.Visible = frame.Visible
+    glow.ClipsDescendants = false
+    
+    -- Tạo shadow/glow effect
+    local shadow = Instance.new("ImageLabel", glow)
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.Position = UDim2.new(0, 0, 0, 0)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1312311753" -- Soft glow texture
+    shadow.ImageColor3 = color or Color3.fromRGB(170, 85, 255)
+    shadow.ImageTransparency = 0.5 - (intensity or 0.3)
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(12, 12, 12, 12)
+    shadow.ZIndex = 0
+    
+    -- Đồng bộ vị trí với frame
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not frame or not frame.Parent then
+            if connection then connection:Disconnect() end
+            return
+        end
+        glow.Size = frame.Size + UDim2.new(0, 24, 0, 24)
+        glow.Position = frame.Position - UDim2.new(0, 12, 0, 12)
+        glow.Visible = frame.Visible
+        glow.ZIndex = frame.ZIndex - 1
+    end)
+    table.insert(NoirUI.Connections, connection)
+    table.insert(NoirUI.Glows, glow)
+    
+    return glow
 end
 
 local function AddSubtitle(parent, subtitleText, yOffset)
@@ -505,10 +553,15 @@ function NoirUI:CreateWindow(settings)
     mainCorner.CornerRadius = UDim.new(0, 12)
     local MainStroke = Instance.new("UIStroke", Main)
     MainStroke.Thickness = 2
-    MainStroke.Color = ACCENT
+    MainStroke.Color = ACCENT  -- Dùng accent, không nhấp nháy
     
     SetupBackground(Main, settings.Background, settings.MainBgColor, settings.MainBgTransparency or 0)
     MakeDraggable(Main)
+    
+    -- GLOW AURA CHO MAIN UI
+    if settings.UseGlow then
+        local mainGlow = CreateUIGlow(Main, ACCENT, 0.3, ScreenGui)
+    end
     
     local LoadingFrame = Instance.new("Frame", ScreenGui)
     LoadingFrame.Size = UDim2.new(0, 300, 0, 120)
@@ -520,6 +573,11 @@ function NoirUI:CreateWindow(settings)
     local LoadingStroke = Instance.new("UIStroke", LoadingFrame)
     LoadingStroke.Color = ACCENT
     LoadingStroke.Thickness = 2
+    
+    -- GLOW AURA CHO LOADING
+    if settings.UseGlow then
+        local loadingGlow = CreateUIGlow(LoadingFrame, ACCENT, 0.3, ScreenGui)
+    end
     
     local hasLoadingBg = SetupBackground(LoadingFrame, settings.LoadingBackground, Color3.fromRGB(12, 12, 12), 0.95)
     LoadingStroke.Transparency = hasLoadingBg and 0 or 1
@@ -538,9 +596,9 @@ function NoirUI:CreateWindow(settings)
     
     if settings.UseGlow then
         CreateGlowTextSlide(LoadingTitle, {
-            Color3.fromRGB(100, 100, 100),
+            Color3.fromRGB(200, 200, 200),
             Color3.fromRGB(255, 255, 255),
-            Color3.fromRGB(100, 100, 100)
+            Color3.fromRGB(200, 200, 200)
         }, 1.5)
     end
     
@@ -607,17 +665,6 @@ function NoirUI:CreateWindow(settings)
         table.insert(NoirUI.Connections, loadingConnection)
     end
     
-    local rainbowConnection
-    task.spawn(function()
-        while Main and Main.Parent do
-            for i = 0, 1, 0.01 do
-                if not Main or not Main.Parent then break end
-                MainStroke.Color = Color3.fromHSV(i, 0.8, 1)
-                task.wait(0.04)
-            end
-        end
-    end)
-    
     local KeySolved = false
     local KUI = nil
     
@@ -663,6 +710,11 @@ function NoirUI:CreateWindow(settings)
             kstr.Color = ACCENT
             MakeDraggable(KUI)
             
+            -- GLOW AURA CHO KEY SYSTEM
+            if settings.UseGlow then
+                local keyGlow = CreateUIGlow(KUI, ACCENT, 0.3, ScreenGui)
+            end
+            
             SetupBackground(KUI, settings.KeyBackground, Color3.fromRGB(12, 12, 12), 0)
             
             local KT = Instance.new("TextLabel", KUI)
@@ -678,9 +730,9 @@ function NoirUI:CreateWindow(settings)
             
             if settings.UseGlow then
                 CreateGlowTextSlide(KT, {
-                    Color3.fromRGB(100, 100, 100),
+                    Color3.fromRGB(200, 200, 200),
                     Color3.fromRGB(255, 255, 255),
-                    Color3.fromRGB(100, 100, 100)
+                    Color3.fromRGB(200, 200, 200)
                 }, 1.5)
             end
             
@@ -778,9 +830,9 @@ function NoirUI:CreateWindow(settings)
     
     if settings.UseGlow then
         CreateGlowTextSlide(Title, {
-            Color3.fromRGB(100, 100, 100),
+            Color3.fromRGB(200, 200, 200),
             Color3.fromRGB(255, 255, 255),
-            Color3.fromRGB(100, 100, 100)
+            Color3.fromRGB(200, 200, 200)
         }, 1.5)
     end
     
@@ -828,6 +880,12 @@ function NoirUI:CreateWindow(settings)
         local s = Instance.new("UIStroke", Conf)
         s.Color = ACCENT
         s.Thickness = 2
+        
+        -- GLOW AURA CHO CONFIRM DIALOG
+        if settings.UseGlow then
+            local confirmGlow = CreateUIGlow(Conf, ACCENT, 0.3, ScreenGui)
+        end
+        
         local t = Instance.new("TextLabel", Conf)
         t.Size = UDim2.new(1, 0, 0.5, 0)
         t.BackgroundTransparency = 1
@@ -945,6 +1003,11 @@ function NoirUI:CreateWindow(settings)
     TBtn.ZIndex = 10
     TBtn.ClipsDescendants = true
     TBtn.AutoButtonColor = false
+
+    -- GLOW AURA CHO FLOAT BUTTON
+    if settings.UseGlow then
+        local floatGlow = CreateUIGlow(TBtn, ACCENT, 0.4, ScreenGui)
+    end
 
     local floatCorner = Instance.new("UICorner", TBtn)
     floatCorner.CornerRadius = UDim.new(0, floatCornerRadius)
@@ -1105,6 +1168,11 @@ function NoirUI:CreateWindow(settings)
         local ns = Instance.new("UIStroke", n)
         ns.Color = ACCENT
         
+        -- GLOW AURA CHO NOTIFICATION
+        if settings.UseGlow then
+            local notifGlow = CreateUIGlow(n, ACCENT, 0.2, ScreenGui)
+        end
+        
         SetupBackground(n, settings.NotificationBackground, Color3.fromRGB(15, 15, 15), 0.25)
         
         if iconName then
@@ -1133,9 +1201,9 @@ function NoirUI:CreateWindow(settings)
         
         if settings.UseGlow then
             CreateGlowTextSlide(tl, {
-                Color3.fromRGB(100, 100, 100),
+                Color3.fromRGB(200, 200, 200),
                 Color3.fromRGB(255, 255, 255),
-                Color3.fromRGB(100, 100, 100)
+                Color3.fromRGB(200, 200, 200)
             }, 1.5)
         end
         
@@ -1203,9 +1271,9 @@ function NoirUI:CreateWindow(settings)
         
         if settings.UseGlow then
             CreateGlowTextSlide(BT, {
-                Color3.fromRGB(80, 80, 80),
-                Color3.fromRGB(200, 200, 255),
-                Color3.fromRGB(80, 80, 80)
+                Color3.fromRGB(180, 180, 180),
+                Color3.fromRGB(255, 200, 255),
+                Color3.fromRGB(180, 180, 180)
             }, 1)
         end
         
@@ -1413,9 +1481,9 @@ function NoirUI:CreateWindow(settings)
             
             if settings.UseGlow then
                 CreateGlowTextSlide(lbl, {
-                    Color3.fromRGB(80, 80, 80),
-                    Color3.fromRGB(255, 200, 100),
-                    Color3.fromRGB(80, 80, 80)
+                    Color3.fromRGB(180, 180, 180),
+                    Color3.fromRGB(255, 220, 150),
+                    Color3.fromRGB(180, 180, 180)
                 }, 1.2)
             end
             
