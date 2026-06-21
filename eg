@@ -865,19 +865,18 @@ function NoirUI:CreateWindow(settings)
     TBtn.BackgroundTransparency = 1
     TBtn.Image = ""
     TBtn.ZIndex = 10
-    TBtn.ClipsDescendants = true 
+    TBtn.ClipsDescendants = true
 
     -- Create squircle shape with UICorner
     local floatCorner = Instance.new("UICorner", TBtn)
     floatCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
 
     -- ClipGroup for proper masking
-    local ClipGroup = Instance.new("CanvasGroup", TBtn)
+    local ClipGroup = Instance.new("Frame", TBtn)
     ClipGroup.Name = "ClipGroup"
     ClipGroup.Size = UDim2.new(1, 0, 1, 0)
     ClipGroup.Position = UDim2.new(0, 0, 0, 0)
     ClipGroup.BackgroundTransparency = 1
-    ClipGroup.GroupTransparency = 0
     ClipGroup.ClipsDescendants = true
     ClipGroup.ZIndex = TBtn.ZIndex
 
@@ -885,7 +884,7 @@ function NoirUI:CreateWindow(settings)
     local clipCorner = Instance.new("UICorner", ClipGroup)
     clipCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
 
-    -- Background
+    -- Background for float button
     if settings.FloatBackground and settings.FloatBackground.Image then
         local bgImage = Instance.new("ImageLabel", ClipGroup)
         bgImage.Name = "BackgroundImage"
@@ -895,21 +894,27 @@ function NoirUI:CreateWindow(settings)
         bgImage.ImageTransparency = settings.FloatBackground.Transparency or 0
         bgImage.ScaleType = Enum.ScaleType.Crop
         bgImage.ZIndex = 1
-    
+
         local imgValue = settings.FloatBackground.Image
         if type(imgValue) == "number" or (type(imgValue) == "string" and imgValue:match("^%d+$")) then
             bgImage.Image = "rbxassetid://" .. tostring(imgValue)
         elseif type(imgValue) == "string" then
             bgImage.Image = imgValue
         end
-        bgImage.ImageTransparency = settings.FloatBackground.Transparency or 0
-        bgImage.ScaleType = Enum.ScaleType.Crop
-    
+        
+        -- Apply clipping mask for background image
+        local bgCorner = Instance.new("UICorner", bgImage)
+        bgCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
+
         local overlay = Instance.new("Frame", ClipGroup)
         overlay.Size = UDim2.new(1, 0, 1, 0)
         overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
         overlay.BackgroundTransparency = 0.4
         overlay.ZIndex = 2
+        
+        -- Apply clipping mask for overlay
+        local overlayCorner = Instance.new("UICorner", overlay)
+        overlayCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
     else
         local bgColor = Instance.new("Frame", ClipGroup)
         bgColor.Size = UDim2.new(1, 0, 1, 0)
@@ -917,21 +922,23 @@ function NoirUI:CreateWindow(settings)
         bgColor.BackgroundTransparency = 0
         bgColor.ZIndex = 1
         
+        -- Apply clipping mask for background color
         local bgCorner = Instance.new("UICorner", bgColor)
         bgCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
     end
 
-    -- Icon with clipping mask (automatically clipped by ClipGroup)
+    -- Icon with clipping mask
     local iconValue = settings.Icon
     if iconValue then
         local iconImage = ResolveIcon(iconValue)
         if iconImage then
             local FI = Instance.new("ImageLabel", ClipGroup)
-            FI.Size = UDim2.new(settings.FloatIconSize and 0 or 1, settings.FloatIconSize or 0, settings.FloatIconSize and 0 or 1, settings.FloatIconSize or 0)
             if settings.FloatIconSize then
+                FI.Size = UDim2.new(0, settings.FloatIconSize, 0, settings.FloatIconSize)
                 FI.Position = UDim2.new(0.5, -settings.FloatIconSize/2, 0.5, -settings.FloatIconSize/2)
             else
-                FI.Position = UDim2.new(0, 0, 0, 0)
+                FI.Size = UDim2.new(0, 24, 0, 24)
+                FI.Position = UDim2.new(0.5, -12, 0.5, -12)
             end
             FI.BackgroundTransparency = 1
             FI.Image = iconImage
@@ -939,7 +946,7 @@ function NoirUI:CreateWindow(settings)
             FI.ScaleType = Enum.ScaleType.Crop
             FI.ZIndex = 3
             
-            -- Apply clipping mask (UICorner) to icon for squircle effect
+            -- Apply clipping mask for icon
             local iconCorner = Instance.new("UICorner", FI)
             iconCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
         elseif type(iconValue) == "string" then
@@ -954,20 +961,16 @@ function NoirUI:CreateWindow(settings)
             textIcon.TextScaled = true
             textIcon.ZIndex = 3
             
-            -- Apply clipping mask (UICorner) to text icon for squircle effect
+            -- Apply clipping mask for text icon
             local textCorner = Instance.new("UICorner", textIcon)
             textCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
         end
     end
 
-    -- Stroke (border) for the float button
+    -- Stroke (border) for float button
     local TS = Instance.new("UIStroke", TBtn)
     TS.Color = ACCENT
     TS.Thickness = 2
-    
-    -- Apply corner to stroke as well
-    local strokeCorner = Instance.new("UICorner", TBtn)
-    strokeCorner.CornerRadius = UDim.new(0, settings.FloatCornerRadius or 12)
 
     -- Draggable logic for float button
     local floatDragging = false
