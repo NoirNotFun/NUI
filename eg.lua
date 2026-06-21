@@ -2,9 +2,7 @@
 	Library Owner: NoirNF
 	UI Engineer: NoirNF
 	Lua Scripter: NoirNF, Adono
-	Executor Compatibility Tester: Adono
-	Theme Creator: Adono
-	Animation Engineer: Adono
+	... (giữ nguyên header)
 ]]
 
 --Core
@@ -354,25 +352,31 @@ local function SetupBackground(frame, bgSetting, bgColor, defaultTransparency)
     end
 end
 
--- EFFECT: GRADIENT XOAY TRÒN
+-- ============================================================
+-- EFFECT: GRADIENT XOAY MƯỢT (Layer dưới cùng)
+-- ============================================================
 local function CreateBorderGradient(borderFrame, colors, speed)
     if not borderFrame then return nil end
     
     local gradient = Instance.new("UIGradient", borderFrame)
+    gradient.ZIndex = 0  -- Layer dưới cùng
     
+    -- Tạo ColorSequence với 3 điểm màu (A -> B -> C -> A) để loop mượt
     local colorKeypoints = {}
     for i, color in ipairs(colors) do
         local position = (i - 1) / (#colors - 1)
         table.insert(colorKeypoints, ColorSequenceKeypoint.new(position, color))
     end
+    -- Thêm màu đầu tiên ở cuối để loop không bị giật
     table.insert(colorKeypoints, ColorSequenceKeypoint.new(1, colors[1]))
     
     gradient.Color = ColorSequence.new(colorKeypoints)
     gradient.Transparency = NumberSequence.new(0)
     gradient.Rotation = 0
     
-    speed = speed or 120
+    speed = speed or 120  -- Độ/giây
     
+    -- Xoay liên tục
     local connection
     connection = RunService.RenderStepped:Connect(function(dt)
         if not borderFrame or not borderFrame.Parent then
@@ -386,7 +390,9 @@ local function CreateBorderGradient(borderFrame, colors, speed)
     return gradient, connection
 end
 
+-- ============================================================
 -- EFFECT: GLOW TEXT CHẠY NGANG
+-- ============================================================
 local function CreateGlowTextSlide(label, colors, speed)
     if not label then return nil end
     
@@ -451,6 +457,7 @@ function NoirUI:CreateWindow(settings)
     BorderFrame.Position = mainDefaultPos
     BorderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     BorderFrame.Visible = false
+    BorderFrame.ZIndex = 0
     local borderCorner = Instance.new("UICorner", BorderFrame)
     borderCorner.CornerRadius = UDim.new(0, 12)
     
@@ -460,6 +467,7 @@ function NoirUI:CreateWindow(settings)
     Main.Size = UDim2.new(0, 420, 0, 300)
     Main.Position = UDim2.new(0, 2, 0, 2)
     Main.BackgroundColor3 = settings.MainBgColor or Color3.fromRGB(10, 10, 10)
+    Main.ZIndex = 1
     local mainCorner = Instance.new("UICorner", Main)
     mainCorner.CornerRadius = UDim.new(0, 11)
     
@@ -711,6 +719,7 @@ function NoirUI:CreateWindow(settings)
     local Header = Instance.new("Frame", Main)
     Header.Size = UDim2.new(1, 0, 0, 40)
     Header.BackgroundTransparency = 1
+    Header.ZIndex = 2
     
     if settings.LogoID then
         local L = Instance.new("ImageLabel", Header)
@@ -845,6 +854,7 @@ function NoirUI:CreateWindow(settings)
     Side.Position = UDim2.new(0, 5, 0, 40)
     Side.BackgroundTransparency = 1
     Side.ClipsDescendants = true
+    Side.ZIndex = 2
     local sideCorner = Instance.new("UICorner", Side)
     sideCorner.CornerRadius = UDim.new(0, 8)
     
@@ -852,6 +862,7 @@ function NoirUI:CreateWindow(settings)
     SideStroke.Color = ACCENT
     SideStroke.Thickness = 1
     SideStroke.Transparency = 0.7
+    SideStroke.ZIndex = 1
     
     local sideGradient = Instance.new("UIGradient", SideStroke)
     local colorKeypoints = {}
@@ -883,6 +894,7 @@ function NoirUI:CreateWindow(settings)
     TScroll.ScrollBarImageTransparency = 0.5
     TScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TScroll.ZIndex = 2
     
     local TLayout = Instance.new("UIListLayout", TScroll)
     TLayout.Padding = UDim.new(0, 5)
@@ -935,6 +947,7 @@ function NoirUI:CreateWindow(settings)
     Cont.Position = UDim2.new(0, 120, 0, 40)
     Cont.BackgroundTransparency = 1
     Cont.ClipsDescendants = true
+    Cont.ZIndex = 2
     local contCorner = Instance.new("UICorner", Cont)
     contCorner.CornerRadius = UDim.new(0, 8)
     
@@ -942,6 +955,7 @@ function NoirUI:CreateWindow(settings)
     ContStroke.Color = ACCENT
     ContStroke.Thickness = 1
     ContStroke.Transparency = 0.7
+    ContStroke.ZIndex = 1
     
     local contGradient = Instance.new("UIGradient", ContStroke)
     local contKeypoints = {}
@@ -1230,8 +1244,17 @@ function NoirUI:CreateWindow(settings)
         B.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         B.BackgroundTransparency = 0.7
         B.Text = ""
-        B.AutoButtonColor = false
+        B.ZIndex = 2
+        B.AutoButtonColor = false  -- Tắt hiệu ứng mờ
         Instance.new("UICorner", B).CornerRadius = UDim.new(0, 6)
+        
+        -- Stroke cho tab khi được chọn
+        local tabStroke = Instance.new("UIStroke", B)
+        tabStroke.Color = ACCENT
+        tabStroke.Thickness = 2
+        tabStroke.Transparency = 1  -- Mặc định ẩn
+        tabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        tabStroke.ZIndex = 2
         
         local BT = Instance.new("TextLabel", B)
         BT.Size = UDim2.new(1, -10, 1, 0)
@@ -1242,13 +1265,7 @@ function NoirUI:CreateWindow(settings)
         BT.Font = "GothamMedium"
         BT.TextSize = 11
         BT.TextXAlignment = "Left"
-        
-        -- Stroke cho tab khi được chọn
-        local tabStroke = Instance.new("UIStroke", B)
-        tabStroke.Color = ACCENT
-        tabStroke.Thickness = 2
-        tabStroke.Transparency = 1
-        tabStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        BT.ZIndex = 2
         
         if useGlow then
             CreateGlowTextSlide(BT, {
@@ -1265,6 +1282,7 @@ function NoirUI:CreateWindow(settings)
             IC.BackgroundTransparency = 1
             IC.ClipsDescendants = true
             IC.ScaleType = Enum.ScaleType.Crop
+            IC.ZIndex = 2
             
             local iconCorner = Instance.new("UICorner", IC)
             iconCorner.CornerRadius = UDim.new(0, 4)
@@ -1287,6 +1305,7 @@ function NoirUI:CreateWindow(settings)
         TabContainer.ScrollBarImageTransparency = 0.5
         TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
         TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+        TabContainer.ZIndex = 2
         
         -- Search Frame với Stroke
         local SearchFrame = Instance.new("Frame", TabContainer)
@@ -1294,6 +1313,7 @@ function NoirUI:CreateWindow(settings)
         SearchFrame.Position = UDim2.new(0, 10, 0, 0)
         SearchFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         SearchFrame.BackgroundTransparency = 0.5
+        SearchFrame.ZIndex = 2
         Instance.new("UICorner", SearchFrame).CornerRadius = UDim.new(0, 8)
         
         -- Stroke cho Search Frame
@@ -1301,6 +1321,7 @@ function NoirUI:CreateWindow(settings)
         searchStroke.Color = ACCENT
         searchStroke.Thickness = 1
         searchStroke.Transparency = 0.7
+        searchStroke.ZIndex = 2
         
         local SearchIcon = Instance.new("TextLabel", SearchFrame)
         SearchIcon.Size = UDim2.new(0, 30, 1, 0)
@@ -1321,11 +1342,12 @@ function NoirUI:CreateWindow(settings)
         SearchBox.TextSize = 12
         SearchBox.ClearTextOnFocus = false
         
-        -- Content Frame
+        -- Content Frame chứa các element
         local ContentFrame = Instance.new("Frame", TabContainer)
         ContentFrame.Size = UDim2.new(1, 0, 0, 0)
         ContentFrame.Position = UDim2.new(0, 0, 0, 45)
         ContentFrame.BackgroundTransparency = 1
+        ContentFrame.ZIndex = 2
         local ContentLayout = Instance.new("UIListLayout", ContentFrame)
         ContentLayout.Padding = UDim.new(0, 8)
         ContentLayout.HorizontalAlignment = "Center"
@@ -1337,7 +1359,7 @@ function NoirUI:CreateWindow(settings)
         end
         ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
         
-        -- Hàm reset tất cả tab
+        -- Reset tất cả tab
         local function resetAllTabs()
             for _, v in pairs(TScroll:GetChildren()) do
                 if v:IsA("TextButton") then
@@ -1359,7 +1381,7 @@ function NoirUI:CreateWindow(settings)
             resetAllTabs()
             TabContainer.Visible = true
             BT.TextColor3 = ACCENT
-            tabStroke.Transparency = 0
+            tabStroke.Transparency = 0  -- Hiện stroke khi chọn
             local tabImg = B:FindFirstChild("ImageLabel")
             if tabImg then tabImg.ImageColor3 = Color3.fromRGB(150, 150, 150) end
             updateCanvas()
@@ -1390,6 +1412,7 @@ function NoirUI:CreateWindow(settings)
             if prop == "Text" then filterElements(SearchBox.Text) end
         end)
         
+        -- ============ CÁC ELEMENT ============
         function Tab:CreateLabel(text, updateFunction)
             local l = Instance.new("TextLabel", ContentFrame)
             l.Size = UDim2.new(0.95, 0, 0, 20)
@@ -1401,6 +1424,7 @@ function NoirUI:CreateWindow(settings)
             l.TextXAlignment = "Left"
             l.LayoutOrder = GetO()
             l.Name = "Label"
+            l.ZIndex = 2
             table.insert(Tab.Elements, l)
             
             if type(text) == "function" then
@@ -1423,15 +1447,17 @@ function NoirUI:CreateWindow(settings)
             s.BackgroundTransparency = 1
             s.LayoutOrder = GetO()
             s.Name = title
+            s.ZIndex = 2
             s.ClipsDescendants = true
             table.insert(Tab.Elements, s)
             
-            -- Header của section
+            -- Header (có thể click)
             local headerBtn = Instance.new("TextButton", s)
             headerBtn.Size = UDim2.new(1, 0, 0, 25)
             headerBtn.Position = UDim2.new(0, 0, 0, 0)
             headerBtn.BackgroundTransparency = 1
             headerBtn.Text = ""
+            headerBtn.ZIndex = 2
             headerBtn.AutoButtonColor = false
             
             local lbl = Instance.new("TextLabel", headerBtn)
@@ -1443,6 +1469,7 @@ function NoirUI:CreateWindow(settings)
             lbl.TextSize = 11
             lbl.TextXAlignment = "Left"
             lbl.BackgroundTransparency = 1
+            lbl.ZIndex = 2
             
             if useGlow then
                 CreateGlowTextSlide(lbl, {
@@ -1463,13 +1490,15 @@ function NoirUI:CreateWindow(settings)
             arrow.TextSize = 10
             arrow.TextXAlignment = "Center"
             arrow.TextYAlignment = "Center"
+            arrow.ZIndex = 2
             arrow.Name = "Arrow"
             
-            -- Container cho các element bên trong section
+            -- Container chứa element bên trong section
             local sectionContent = Instance.new("Frame", s)
             sectionContent.Size = UDim2.new(1, 0, 0, 0)
             sectionContent.Position = UDim2.new(0, 0, 0, 25)
             sectionContent.BackgroundTransparency = 1
+            sectionContent.ZIndex = 2
             sectionContent.Name = "SectionContent"
             
             local sectionLayout = Instance.new("UIListLayout", sectionContent)
@@ -1510,9 +1539,9 @@ function NoirUI:CreateWindow(settings)
                 line.BackgroundColor3 = ACCENT
                 line.BackgroundTransparency = 0.5
                 line.BorderSizePixel = 0
+                line.ZIndex = 2
             end
             
-            -- Lưu section content
             Tab._currentSectionContent = sectionContent
             Tab._sectionLayout = sectionLayout
             
@@ -1524,6 +1553,7 @@ function NoirUI:CreateWindow(settings)
             f.Size = UDim2.new(0.95, 0, 0, 65)
             f.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
             f.BackgroundTransparency = 0.5
+            f.ZIndex = 2
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
             f.Name = opt.Title or ""
@@ -1538,6 +1568,7 @@ function NoirUI:CreateWindow(settings)
             title.TextSize = 13
             title.BackgroundTransparency = 1
             title.TextXAlignment = "Left"
+            title.ZIndex = 2
             
             if useGlow then
                 CreateGlowTextSlide(title, {
@@ -1558,6 +1589,7 @@ function NoirUI:CreateWindow(settings)
             content.TextWrapped = true
             content.TextXAlignment = "Left"
             content.TextYAlignment = "Top"
+            content.ZIndex = 2
             return f
         end
         
@@ -1568,6 +1600,7 @@ function NoirUI:CreateWindow(settings)
             f.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
             f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
             f.BackgroundTransparency = 0.7
+            f.ZIndex = 2
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
             f.Name = opt.Name or ""
@@ -1583,6 +1616,7 @@ function NoirUI:CreateWindow(settings)
             i.Font = "GothamMedium"
             i.TextSize = 12
             i.TextXAlignment = "Left"
+            i.ZIndex = 2
             i.FocusLost:Connect(function() if opt.Callback then opt.Callback(i.Text) end end)
             
             if hasSubtitle then
@@ -1602,10 +1636,11 @@ function NoirUI:CreateWindow(settings)
             b.TextColor3 = Color3.new(1, 1, 1)
             b.Font = "GothamMedium"
             b.TextSize = 12
-            b.AutoButtonColor = false
+            b.ZIndex = 2
             Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
             b.LayoutOrder = GetO()
             b.Name = opt.Name
+            b.AutoButtonColor = false
             table.insert(Tab.Elements, b)
             
             if opt.Align == false then
@@ -1621,6 +1656,7 @@ function NoirUI:CreateWindow(settings)
                 hint.TextSize = 10
                 hint.TextXAlignment = "Right"
                 hint.TextYAlignment = "Center"
+                hint.ZIndex = 2
             else
                 b.TextXAlignment = "Center"
             end
@@ -1648,10 +1684,11 @@ function NoirUI:CreateWindow(settings)
             t.TextColor3 = s and ACCENT or Color3.fromRGB(180, 180, 180)
             t.TextXAlignment = "Left"
             t.TextSize = 12
-            t.AutoButtonColor = false
+            t.ZIndex = 2
             Instance.new("UICorner", t).CornerRadius = UDim.new(0, 8)
             t.LayoutOrder = GetO()
             t.Name = opt.Name
+            t.AutoButtonColor = false
             table.insert(Tab.Elements, t)
             
             local bx = Instance.new("Frame", t)
@@ -1659,6 +1696,7 @@ function NoirUI:CreateWindow(settings)
             bx.Position = UDim2.new(1, -40, 0.5, hasSubtitle and -15 or -8)
             bx.BackgroundColor3 = s and ACCENT or Color3.fromRGB(40, 40, 40)
             bx.BackgroundTransparency = 0.3
+            bx.ZIndex = 2
             Instance.new("UICorner", bx).CornerRadius = UDim.new(1, 0)
             
             if hasSubtitle then
@@ -1691,6 +1729,7 @@ function NoirUI:CreateWindow(settings)
             f.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 70 or 50)
             f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
             f.BackgroundTransparency = 0.7
+            f.ZIndex = 2
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
             f.Name = opt.Name or ""
@@ -1704,18 +1743,21 @@ function NoirUI:CreateWindow(settings)
             l.TextColor3 = Color3.new(1, 1, 1)
             l.TextXAlignment = "Left"
             l.TextSize = 11
+            l.ZIndex = 2
             
             local sbg = Instance.new("Frame", f)
             sbg.Size = UDim2.new(0.9, 0, 0, 8)
             sbg.Position = UDim2.new(0.05, 0, hasSubtitle and 0.55 or 0.7, 0)
             sbg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             sbg.BackgroundTransparency = 0.5
+            sbg.ZIndex = 2
             Instance.new("UICorner", sbg)
             
             local fill = Instance.new("Frame", sbg)
             local percent = (defaultValue - min) / (max - min)
             fill.Size = UDim2.new(percent, 0, 1, 0)
-            fill.BackgroundColor3 = ACCENT
+            fill.BackgroundColor3 = ACCENT  -- Chỉ lấy màu đầu tiên
+            fill.ZIndex = 2
             Instance.new("UICorner", fill)
             
             if hasSubtitle then
@@ -1764,6 +1806,7 @@ function NoirUI:CreateWindow(settings)
             f.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
             f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
             f.BackgroundTransparency = 0.7
+            f.ZIndex = 2
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
             f.ClipsDescendants = true
@@ -1779,12 +1822,14 @@ function NoirUI:CreateWindow(settings)
             t.Font = "GothamMedium"
             t.TextSize = 12
             t.TextXAlignment = "Left"
+            t.ZIndex = 2
             
             local pvw = Instance.new("TextButton", f)
             pvw.Size = UDim2.new(0, 40, 0, 18)
             pvw.Position = UDim2.new(1, -50, 0, hasSubtitle and 8.5 or 8.5)
             pvw.BackgroundColor3 = ColorSelected
             pvw.Text = ""
+            pvw.ZIndex = 2
             pvw.AutoButtonColor = false
             Instance.new("UICorner", pvw).CornerRadius = UDim.new(0, 4)
             
@@ -1796,12 +1841,14 @@ function NoirUI:CreateWindow(settings)
             Holder.Size = UDim2.new(1, 0, 0, 140)
             Holder.Position = UDim2.new(0, 0, 0, 35)
             Holder.BackgroundTransparency = 1
+            Holder.ZIndex = 2
             
             local satBox = Instance.new("ImageButton", Holder)
             satBox.Size = UDim2.new(0.9, 0, 0, 100)
             satBox.Position = UDim2.new(0.05, 0, 0, 5)
             satBox.Image = "rbxassetid://4155801252"
             satBox.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+            satBox.ZIndex = 2
             satBox.AutoButtonColor = false
             Instance.new("UICorner", satBox).CornerRadius = UDim.new(0, 6)
             
@@ -1810,12 +1857,14 @@ function NoirUI:CreateWindow(settings)
             cursor.AnchorPoint = Vector2.new(0.5, 0.5)
             cursor.BackgroundColor3 = Color3.new(1, 1, 1)
             cursor.Position = UDim2.new(s, 0, 1 - v, 0)
+            cursor.ZIndex = 2
             Instance.new("UICorner", cursor).CornerRadius = UDim.new(1, 0)
             
             local hueSlide = Instance.new("ImageButton", Holder)
             hueSlide.Size = UDim2.new(0.9, 0, 0, 12)
             hueSlide.Position = UDim2.new(0.05, 0, 0, 115)
             hueSlide.Image = "rbxassetid://3641079629"
+            hueSlide.ZIndex = 2
             hueSlide.AutoButtonColor = false
             Instance.new("UICorner", hueSlide).CornerRadius = UDim.new(0, 6)
             
@@ -1824,6 +1873,7 @@ function NoirUI:CreateWindow(settings)
             hCursor.Position = UDim2.new(1 - h, 0, 0.5, 0)
             hCursor.AnchorPoint = Vector2.new(0.5, 0.5)
             hCursor.BackgroundColor3 = Color3.new(1, 1, 1)
+            hCursor.ZIndex = 2
             Instance.new("UICorner", hCursor)
             
             local function UpdateColor()
@@ -1873,6 +1923,7 @@ function NoirUI:CreateWindow(settings)
             d.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
             d.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
             d.BackgroundTransparency = 0.7
+            d.ZIndex = 2
             Instance.new("UICorner", d).CornerRadius = UDim.new(0, 8)
             d.LayoutOrder = GetO()
             d.ClipsDescendants = true
@@ -1888,6 +1939,7 @@ function NoirUI:CreateWindow(settings)
             t.Font = "GothamMedium"
             t.TextSize = 12
             t.TextXAlignment = "Left"
+            t.ZIndex = 2
             t.AutoButtonColor = false
             
             local Arrow = Instance.new("TextLabel", t)
@@ -1900,6 +1952,7 @@ function NoirUI:CreateWindow(settings)
             Arrow.Font = "GothamMedium"
             Arrow.TextSize = 14
             Arrow.TextXAlignment = "Center"
+            Arrow.ZIndex = 2
             
             if hasSubtitle then
                 AddSubtitle(d, opt.Subtitle, 38)
@@ -1913,6 +1966,7 @@ function NoirUI:CreateWindow(settings)
             il.ScrollBarThickness = 2
             il.AutomaticCanvasSize = "Y"
             il.Visible = false
+            il.ZIndex = 2
             local ilLayout = Instance.new("UIListLayout", il)
             ilLayout.Padding = UDim.new(0, 2)
             
@@ -1936,6 +1990,7 @@ function NoirUI:CreateWindow(settings)
                     it.TextColor3 = Color3.fromRGB(200, 200, 200)
                     it.Font = "GothamMedium"
                     it.TextSize = 11
+                    it.ZIndex = 2
                     it.AutoButtonColor = false
                     
                     it.MouseButton1Click:Connect(function()
@@ -1983,6 +2038,7 @@ function NoirUI:CreateWindow(settings)
                     it.TextColor3 = Color3.fromRGB(200, 200, 200)
                     it.Font = "GothamMedium"
                     it.TextSize = 11
+                    it.ZIndex = 2
                     it.AutoButtonColor = false
                     
                     it.MouseButton1Click:Connect(function()
@@ -2028,6 +2084,7 @@ function NoirUI:CreateWindow(settings)
             f.Size = UDim2.new(0.95, 0, 0, 38)
             f.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
             f.BackgroundTransparency = 0.7
+            f.ZIndex = 2
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
             f.Name = "RunBox"
@@ -2044,6 +2101,7 @@ function NoirUI:CreateWindow(settings)
             i.TextSize = 11
             i.TextXAlignment = "Left"
             i.ClearTextOnFocus = false
+            i.ZIndex = 2
             
             local r = Instance.new("TextButton", f)
             r.Size = UDim2.new(0, 50, 0, 26)
@@ -2053,6 +2111,7 @@ function NoirUI:CreateWindow(settings)
             r.TextColor3 = Color3.new(1, 1, 1)
             r.Font = "GothamBold"
             r.TextSize = 10
+            r.ZIndex = 2
             r.AutoButtonColor = false
             Instance.new("UICorner", r).CornerRadius = UDim.new(0, 6)
             
