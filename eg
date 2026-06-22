@@ -74,6 +74,24 @@ local function AddGlowStroke(parent, accentColor, baseThickness, glowThickness, 
 end
 
 -- ============================================
+-- BLUR OVERLAY
+-- ============================================
+
+local function AddBlurOverlay(parent, blurAmount)
+    if not parent or not blurAmount or blurAmount <= 0 then return nil end
+    local existing = parent:FindFirstChild("BlurOverlay")
+    if existing then existing:Destroy() end
+    local blur = Instance.new("Frame", parent)
+    blur.Name = "BlurOverlay"
+    blur.Size = UDim2.new(1, 0, 1, 0)
+    blur.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    blur.BackgroundTransparency = 1 - math.clamp(blurAmount, 0, 1)
+    blur.ZIndex = 0
+    blur.BorderSizePixel = 0
+    return blur
+end
+
+-- ============================================
 -- ANIMATION FUNCTIONS
 -- ============================================
 
@@ -617,6 +635,19 @@ function NoirUI:CreateWindow(settings)
     local ACCENT = settings.Accent or Color3.fromRGB(170, 85, 255)
     local useAutoContrast = settings.AutoContrast or false
     
+    -- Mặc định các tùy chọn màu sắc và blur
+    settings.MainBlur = settings.MainBlur or 0
+    settings.KeyBlur = settings.KeyBlur or 0
+    settings.LoadingBlur = settings.LoadingBlur or 0
+    settings.NotificationBlur = settings.NotificationBlur or 0
+    settings.ConfirmBlur = settings.ConfirmBlur or 0
+    settings.ElementBackgroundColor = settings.ElementBackgroundColor or nil
+    settings.SidebarBackgroundColor = settings.SidebarBackgroundColor or nil
+    settings.SidebarTransparency = settings.SidebarTransparency or 0.8
+    settings.TabBackgroundColor = settings.TabBackgroundColor or nil
+    settings.ConfirmBackgroundColor = settings.ConfirmBackgroundColor or Color3.fromRGB(15, 15, 15)
+    settings.NotificationBackgroundColor = settings.NotificationBackgroundColor or Color3.fromRGB(15, 15, 15)
+    
     local mainDefaultPos = settings.DefaultPosition or UDim2.new(0.5, -210, 0.5, -150)
     local floatDefaultPos = settings.FloatDefaultPosition or UDim2.new(0, 15, 0.5, -22)
     
@@ -636,6 +667,8 @@ function NoirUI:CreateWindow(settings)
     MainStroke.Color = ACCENT
     -- Glow Stroke: dày 6px, mờ 0.7
     AddGlowStroke(Main, ACCENT, 2, 6, 0.7)
+    -- Blur overlay
+    AddBlurOverlay(Main, settings.MainBlur)
     
     SetupBackground(Main, settings.Background, settings.MainBgColor, settings.MainBgTransparency or 0)
     MakeDraggable(Main)
@@ -793,6 +826,8 @@ function NoirUI:CreateWindow(settings)
     LoadingStroke.Thickness = 2
     -- Glow Stroke: dày 5px, mờ 0.75
     AddGlowStroke(LoadingFrame, ACCENT, 2, 5, 0.75)
+    -- Blur overlay
+    AddBlurOverlay(LoadingFrame, settings.LoadingBlur)
     
     if settings.UseGlow then
         local loadingGlow = CreateUIGlow(LoadingFrame, ACCENT, 0.3, ScreenGui)
@@ -950,6 +985,8 @@ function NoirUI:CreateWindow(settings)
             kstr.Color = ACCENT
             -- Glow Stroke: dày 8px, mờ 0.6 (nổi bật hơn)
             AddGlowStroke(KUI, ACCENT, 2, 8, 0.6)
+            -- Blur overlay
+            AddBlurOverlay(KUI, settings.KeyBlur)
             MakeDraggable(KUI)
             
             if settings.UseGlow then
@@ -1143,7 +1180,7 @@ function NoirUI:CreateWindow(settings)
         NoirUI.ActiveConfirmFrame = Conf
         Conf.Size = UDim2.new(0, 260, 0, 120)
         Conf.Position = UDim2.new(0.5, -130, 0.5, -60)
-        Conf.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        Conf.BackgroundColor3 = settings.ConfirmBackgroundColor
         Conf.ZIndex = 100
         local confCorner = Instance.new("UICorner", Conf)
         confCorner.CornerRadius = UDim.new(0, 12)
@@ -1152,6 +1189,8 @@ function NoirUI:CreateWindow(settings)
         s.Thickness = 2
         -- Glow Stroke: dày 4px, mờ 0.85
         AddGlowStroke(Conf, ACCENT, 2, 4, 0.85)
+        -- Blur overlay
+        AddBlurOverlay(Conf, settings.ConfirmBlur)
         
         if settings.UseGlow then
             local confirmGlow = CreateUIGlow(Conf, ACCENT, 0.3, ScreenGui)
@@ -1164,7 +1203,11 @@ function NoirUI:CreateWindow(settings)
         t.Size = UDim2.new(1, 0, 0.5, 0)
         t.BackgroundTransparency = 1
         t.Text = "Bạn có muốn đóng UI không?"
-        t.TextColor3 = Color3.new(1,1,1)
+        if useAutoContrast then
+            t.TextColor3 = GetContrastColor(settings.ConfirmBackgroundColor)
+        else
+            t.TextColor3 = Color3.new(1,1,1)
+        end
         t.TextTransparency = 0
         t.Font = "Gotham"  -- 🔥 BODY TEXT → Inter
         t.TextSize = 13
@@ -1232,6 +1275,12 @@ function NoirUI:CreateWindow(settings)
     Side.ClipsDescendants = true
     local sideCorner = Instance.new("UICorner", Side)
     sideCorner.CornerRadius = UDim.new(0, 8)
+    
+    -- Áp dụng màu sidebar nếu có
+    if settings.SidebarBackgroundColor then
+        Side.BackgroundColor3 = settings.SidebarBackgroundColor
+        Side.BackgroundTransparency = settings.SidebarTransparency or 0.8
+    end
     
     local SideStroke = Instance.new("UIStroke", Side)
     SideStroke.Color = ACCENT
@@ -1336,19 +1385,21 @@ function NoirUI:CreateWindow(settings)
         local n = Instance.new("Frame", ScreenGui)
         n.Size = UDim2.new(0, 260, 0, 65)
         n.Position = UDim2.new(1, 20, 0.8, 0)
-        n.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        n.BackgroundColor3 = settings.NotificationBackgroundColor
         local notifCorner = Instance.new("UICorner", n)
         notifCorner.CornerRadius = UDim.new(0, 8)
         local ns = Instance.new("UIStroke", n)
         ns.Color = ACCENT
         -- Glow Stroke: dày 5px, mờ 0.75
         AddGlowStroke(n, ACCENT, 2, 5, 0.75)
+        -- Blur overlay
+        AddBlurOverlay(n, settings.NotificationBlur)
         
         if settings.UseGlow then
             local notifGlow = CreateUIGlow(n, ACCENT, 0.2, ScreenGui)
         end
         
-        SetupBackground(n, settings.NotificationBackground, Color3.fromRGB(15, 15, 15), 0.25)
+        SetupBackground(n, settings.NotificationBackground, settings.NotificationBackgroundColor, 0.25)
         CreateSpringEffect(n)
         
         if iconName then
@@ -1371,7 +1422,7 @@ function NoirUI:CreateWindow(settings)
         tl.Text = title
         
         if useAutoContrast then
-            tl.TextColor3 = GetContrastColor(Color3.fromRGB(15, 15, 15))
+            tl.TextColor3 = GetContrastColor(settings.NotificationBackgroundColor)
         else
             tl.TextColor3 = ACCENT
         end
@@ -1427,7 +1478,11 @@ function NoirUI:CreateWindow(settings)
     function Window:CreateTab(name, icon)
         local B = Instance.new("TextButton", TScroll)
         B.Size = UDim2.new(1, -5, 0, 32)
-        B.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        if settings.TabBackgroundColor then
+            B.BackgroundColor3 = settings.TabBackgroundColor
+        else
+            B.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        end
         B.BackgroundTransparency = 0.7
         B.Text = ""
         B.AutoButtonColor = false
@@ -1454,7 +1509,7 @@ function NoirUI:CreateWindow(settings)
         BT.Text = name
         
         if useAutoContrast then
-            BT.TextColor3 = GetContrastColor(Color3.fromRGB(20, 20, 20))
+            BT.TextColor3 = GetContrastColor(B.BackgroundColor3)
         else
             BT.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
@@ -1512,7 +1567,11 @@ function NoirUI:CreateWindow(settings)
         local SearchFrame = Instance.new("Frame", TabContainer)
         SearchFrame.Size = UDim2.new(1, -20, 0, 35)
         SearchFrame.Position = UDim2.new(0, 10, 0, 0)
-        SearchFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        if settings.ElementBackgroundColor then
+            SearchFrame.BackgroundColor3 = settings.ElementBackgroundColor
+        else
+            SearchFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        end
         SearchFrame.BackgroundTransparency = 0.5
         Instance.new("UICorner", SearchFrame).CornerRadius = UDim.new(0, 8)
         
@@ -1530,7 +1589,7 @@ function NoirUI:CreateWindow(settings)
         SearchIcon.Text = "🔍"
         
         if useAutoContrast then
-            SearchIcon.TextColor3 = GetContrastColor(Color3.fromRGB(20, 20, 20))
+            SearchIcon.TextColor3 = GetContrastColor(SearchFrame.BackgroundColor3)
         else
             SearchIcon.TextColor3 = Color3.fromRGB(150, 150, 150)
         end
@@ -1572,7 +1631,7 @@ function NoirUI:CreateWindow(settings)
                     local t = v:FindFirstChild("TextLabel")
                     if t then 
                         if useAutoContrast then
-                            t.TextColor3 = GetContrastColor(Color3.fromRGB(20, 20, 20))
+                            t.TextColor3 = GetContrastColor(v.BackgroundColor3)
                         else
                             t.TextColor3 = Color3.fromRGB(150, 150, 150)
                         end
@@ -1820,7 +1879,11 @@ function NoirUI:CreateWindow(settings)
             local parent = Tab._currentSectionContent or ContentFrame
             local f = Instance.new("Frame", parent)
             f.Size = UDim2.new(0.95, 0, 0, 65)
-            f.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+            if settings.ElementBackgroundColor then
+                f.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                f.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+            end
             f.BackgroundTransparency = 0.5
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
@@ -1835,7 +1898,7 @@ function NoirUI:CreateWindow(settings)
             title.Text = opt.Title or ""
             
             if useAutoContrast then
-                title.TextColor3 = GetContrastColor(Color3.fromRGB(15, 15, 15))
+                title.TextColor3 = GetContrastColor(f.BackgroundColor3)
             else
                 title.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
@@ -1868,7 +1931,11 @@ function NoirUI:CreateWindow(settings)
             local hasSubtitle = opt.Subtitle and opt.Subtitle ~= ""
             local f = Instance.new("Frame", parent)
             f.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
-            f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            if settings.ElementBackgroundColor then
+                f.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            end
             f.BackgroundTransparency = 0.7
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
@@ -1886,7 +1953,7 @@ function NoirUI:CreateWindow(settings)
             i.Text = opt.Default or ""
             
             if useAutoContrast then
-                i.TextColor3 = GetContrastColor(Color3.fromRGB(22, 22, 22))
+                i.TextColor3 = GetContrastColor(f.BackgroundColor3)
             else
                 i.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
@@ -1908,12 +1975,16 @@ function NoirUI:CreateWindow(settings)
             local hasSubtitle = opt.Subtitle and opt.Subtitle ~= ""
             local b = Instance.new("TextButton", parent)
             b.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
-            b.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            if settings.ElementBackgroundColor then
+                b.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                b.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            end
             b.BackgroundTransparency = 0.6
             b.Text = opt.Name
             
             if useAutoContrast then
-                b.TextColor3 = GetContrastColor(Color3.fromRGB(25, 25, 25))
+                b.TextColor3 = GetContrastColor(b.BackgroundColor3)
             else
                 b.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
@@ -1966,12 +2037,16 @@ function NoirUI:CreateWindow(settings)
             local s = opt.Default or false
             local t = Instance.new("TextButton", parent)
             t.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
-            t.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            if settings.ElementBackgroundColor then
+                t.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                t.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            end
             t.BackgroundTransparency = 0.6
             t.Text = "  " .. opt.Name
             
             if useAutoContrast then
-                t.TextColor3 = s and GetContrastColor(Color3.fromRGB(25, 25, 25)) or Color3.fromRGB(180, 180, 180)
+                t.TextColor3 = s and GetContrastColor(t.BackgroundColor3) or Color3.fromRGB(180, 180, 180)
             else
                 t.TextColor3 = s and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
             end
@@ -2004,7 +2079,7 @@ function NoirUI:CreateWindow(settings)
                 
                 s = not s
                 if useAutoContrast then
-                    t.TextColor3 = s and GetContrastColor(Color3.fromRGB(25, 25, 25)) or Color3.fromRGB(180, 180, 180)
+                    t.TextColor3 = s and GetContrastColor(t.BackgroundColor3) or Color3.fromRGB(180, 180, 180)
                 else
                     t.TextColor3 = s and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
                 end
@@ -2031,7 +2106,11 @@ function NoirUI:CreateWindow(settings)
             
             local f = Instance.new("Frame", parent)
             f.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 70 or 50)
-            f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            if settings.ElementBackgroundColor then
+                f.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            end
             f.BackgroundTransparency = 0.7
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
@@ -2047,7 +2126,7 @@ function NoirUI:CreateWindow(settings)
             l.Text = opt.Name .. ": " .. defaultValue
             
             if useAutoContrast then
-                l.TextColor3 = GetContrastColor(Color3.fromRGB(22, 22, 22))
+                l.TextColor3 = GetContrastColor(f.BackgroundColor3)
             else
                 l.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
@@ -2118,7 +2197,11 @@ function NoirUI:CreateWindow(settings)
             
             local f = Instance.new("Frame", parent)
             f.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
-            f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            if settings.ElementBackgroundColor then
+                f.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                f.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            end
             f.BackgroundTransparency = 0.7
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
@@ -2135,7 +2218,7 @@ function NoirUI:CreateWindow(settings)
             t.Text = opt.Name
             
             if useAutoContrast then
-                t.TextColor3 = GetContrastColor(Color3.fromRGB(22, 22, 22))
+                t.TextColor3 = GetContrastColor(f.BackgroundColor3)
             else
                 t.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
@@ -2291,7 +2374,11 @@ function NoirUI:CreateWindow(settings)
             local hasSubtitle = opt.Subtitle and opt.Subtitle ~= ""
             local d = Instance.new("Frame", parent)
             d.Size = UDim2.new(0.95, 0, 0, hasSubtitle and 55 or 35)
-            d.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            if settings.ElementBackgroundColor then
+                d.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                d.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+            end
             d.BackgroundTransparency = 0.7
             Instance.new("UICorner", d).CornerRadius = UDim.new(0, 8)
             d.LayoutOrder = GetO()
@@ -2308,7 +2395,7 @@ function NoirUI:CreateWindow(settings)
             t.Text = "  " .. opt.Name .. " : " .. (opt.Default or (opt.Options and opt.Options[1] or "Đang tải..."))
             
             if useAutoContrast then
-                t.TextColor3 = GetContrastColor(Color3.fromRGB(22, 22, 22))
+                t.TextColor3 = GetContrastColor(d.BackgroundColor3)
             else
                 t.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
@@ -2328,7 +2415,7 @@ function NoirUI:CreateWindow(settings)
             Arrow.Text = "▼"
             
             if useAutoContrast then
-                Arrow.TextColor3 = GetContrastColor(Color3.fromRGB(22, 22, 22))
+                Arrow.TextColor3 = GetContrastColor(d.BackgroundColor3)
             else
                 Arrow.TextColor3 = Color3.fromRGB(180, 180, 180)
             end
@@ -2368,12 +2455,16 @@ function NoirUI:CreateWindow(settings)
                     -- DROPDOWN OPTIONS → Space Grotesk (XÓA HOVER)
                     local it = Instance.new("TextButton", il)
                     it.Size = UDim2.new(1, 0, 0, 30)
-                    it.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+                    if settings.ElementBackgroundColor then
+                        it.BackgroundColor3 = settings.ElementBackgroundColor
+                    else
+                        it.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+                    end
                     it.BackgroundTransparency = 0.5
                     it.Text = option
                     
                     if useAutoContrast then
-                        it.TextColor3 = GetContrastColor(Color3.fromRGB(28, 28, 28))
+                        it.TextColor3 = GetContrastColor(it.BackgroundColor3)
                     else
                         it.TextColor3 = Color3.fromRGB(255, 255, 255)
                     end
@@ -2426,12 +2517,16 @@ function NoirUI:CreateWindow(settings)
                 for _, v in pairs(opt.Options) do
                     local it = Instance.new("TextButton", il)
                     it.Size = UDim2.new(1, 0, 0, 30)
-                    it.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+                    if settings.ElementBackgroundColor then
+                        it.BackgroundColor3 = settings.ElementBackgroundColor
+                    else
+                        it.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+                    end
                     it.BackgroundTransparency = 0.5
                     it.Text = v
                     
                     if useAutoContrast then
-                        it.TextColor3 = GetContrastColor(Color3.fromRGB(28, 28, 28))
+                        it.TextColor3 = GetContrastColor(it.BackgroundColor3)
                     else
                         it.TextColor3 = Color3.fromRGB(255, 255, 255)
                     end
@@ -2484,7 +2579,11 @@ function NoirUI:CreateWindow(settings)
             local parent = Tab._currentSectionContent or ContentFrame
             local f = Instance.new("Frame", parent)
             f.Size = UDim2.new(0.95, 0, 0, 38)
-            f.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+            if settings.ElementBackgroundColor then
+                f.BackgroundColor3 = settings.ElementBackgroundColor
+            else
+                f.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+            end
             f.BackgroundTransparency = 0.7
             Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
             f.LayoutOrder = GetO()
@@ -2502,7 +2601,7 @@ function NoirUI:CreateWindow(settings)
             i.Text = ""
             
             if useAutoContrast then
-                i.TextColor3 = GetContrastColor(Color3.fromRGB(18, 18, 18))
+                i.TextColor3 = GetContrastColor(f.BackgroundColor3)
             else
                 i.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
