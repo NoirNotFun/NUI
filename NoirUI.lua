@@ -16,7 +16,7 @@ local HttpService = game:GetService("HttpService")
 local OldGui = game.CoreGui:FindFirstChild("NoirUI_V3_Ultimate")
 if OldGui then OldGui:Destroy() end
 
-local NoirUI = { Notifications = {}, ActiveConfirmFrame = nil, CustomCommands = {}, Connections = {}, Glows = {}, TabGroups = {} }
+local NoirUI = { Notifications = {}, ActiveConfirmFrame = nil, CustomCommands = {}, Connections = {}, Glows = {} }
 
 local LucideIcons = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirGoodBoi/UI/refs/heads/main/icons.lua"))()
 
@@ -56,7 +56,7 @@ local function GetContrastColor(backgroundColor)
 end
 
 -- ============================================
--- GLOW STROKE (NEON) - CÓ THỂ TÙY CHỈNH ĐỘ DÀY & MỜ
+-- GLOW STROKE (NEON)
 -- ============================================
 
 local function AddGlowStroke(parent, accentColor, baseThickness, glowThickness, glowTransparency)
@@ -74,7 +74,7 @@ local function AddGlowStroke(parent, accentColor, baseThickness, glowThickness, 
 end
 
 -- ============================================
--- BLUR OVERLAY (CÓ CẮT THEO VIỀN)
+-- BLUR OVERLAY
 -- ============================================
 
 local function AddBlurOverlay(parent, blurAmount)
@@ -1320,7 +1320,7 @@ function NoirUI:CreateWindow(settings)
     local allTabButtons = {}
     
     -- ============================================
-    -- TAB GROUP (NHÓM TAB) - GIỐNG SECTION
+    -- TAB GROUP (NHÓM TAB)
     -- ============================================
     function Window:CreateTabGroup(title, defaultOpen)
         local group = {}
@@ -1332,7 +1332,6 @@ function NoirUI:CreateWindow(settings)
         groupFrame.ClipsDescendants = true
         groupFrame.LayoutOrder = #TScroll:GetChildren() + 1
         
-        -- Header (click để collapse/expand)
         local header = Instance.new("TextButton", groupFrame)
         header.Size = UDim2.new(1, 0, 0, 28)
         header.BackgroundTransparency = 1
@@ -1371,7 +1370,6 @@ function NoirUI:CreateWindow(settings)
         arrow.TextYAlignment = "Center"
         arrow.Name = "Arrow"
         
-        -- Container chứa các tab con
         local content = Instance.new("Frame", groupFrame)
         content.Size = UDim2.new(1, 0, 0, 0)
         content.Position = UDim2.new(0, 0, 0, 28)
@@ -1381,22 +1379,17 @@ function NoirUI:CreateWindow(settings)
         contentLayout.Padding = UDim.new(0, 2)
         contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         
-        -- Hàm thêm tab vào group
         function group:CreateTab(name, icon)
-            -- Tạo tab bằng hàm CreateTab gốc
             local tab = Window:CreateTab(name, icon)
-            -- Lấy button của tab và di chuyển vào group
             local btn = tab._button
             if btn then
                 btn.Parent = content
-                btn.Position = UDim2.new(0, 15, 0, 0) -- Thụt lề
+                btn.Position = UDim2.new(0, 15, 0, 0)
                 btn.Size = UDim2.new(1, -5, 0, 32)
-                -- Cập nhật lại background theo setting
                 if settings.TabBackgroundColor then
                     btn.BackgroundColor3 = settings.TabBackgroundColor
                 end
             end
-            -- Cập nhật chiều cao group
             task.wait()
             local contentHeight = contentLayout.AbsoluteContentSize.Y + 10
             if isOpen then
@@ -1407,7 +1400,6 @@ function NoirUI:CreateWindow(settings)
             return tab
         end
         
-        -- Collapse/Expand
         header.MouseButton1Click:Connect(function()
             PlaySound("Element")
             CreateClickScaleEffect(header)
@@ -1424,7 +1416,6 @@ function NoirUI:CreateWindow(settings)
             updateSidebarCanvas()
         end)
         
-        -- Cập nhật chiều cao ban đầu
         task.wait()
         local contentHeight = contentLayout.AbsoluteContentSize.Y + 10
         content.Size = UDim2.new(1, 0, 0, isOpen and contentHeight or 0)
@@ -1435,7 +1426,7 @@ function NoirUI:CreateWindow(settings)
     end
     
     -- ============================================
-    -- HÀM TẠO TAB ROOT (gốc - không nằm trong group)
+    -- HÀM TẠO TAB ROOT
     -- ============================================
     function Window:CreateTab(name, icon)
         local B = Instance.new("TextButton", TScroll)
@@ -2544,6 +2535,249 @@ function NoirUI:CreateWindow(settings)
                     i.Text = ""
                 end
             end)
+        end
+        
+        -- ============================================
+        -- GRID BUTTON & SHADER BUTTON (MỚI)
+        -- ============================================
+        
+        -- Tạo Grid
+        function Tab:CreateGrid(columns, cellHeight, spacing)
+            columns = columns or 2
+            cellHeight = cellHeight or 35
+            spacing = spacing or 5
+            
+            local parent = Tab._currentSectionContent or Tab.ContentFrame
+            
+            local grid = Instance.new("Frame", parent)
+            grid.Size = UDim2.new(1, 0, 0, 0)
+            grid.BackgroundTransparency = 1
+            grid.AutomaticSize = Enum.AutomaticSize.Y
+            grid.Name = "Grid"
+            
+            local layout = Instance.new("UIGridLayout", grid)
+            layout.CellSize = UDim2.new(1/columns - 0.02, 0, 0, cellHeight)
+            layout.CellPadding = UDim2.new(0, spacing, 0, spacing)
+            layout.FillDirection = Enum.FillDirection.Horizontal
+            layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            layout.SortOrder = Enum.SortOrder.LayoutOrder
+            layout.Name = "GridLayout"
+            
+            return grid
+        end
+        
+        -- Tạo Grid Button với tùy chỉnh
+        function Tab:CreateGridButton(grid, options)
+            local name = options.name or "Button"
+            local callback = options.callback or function() end
+            local icon = options.icon or nil
+            local image = options.image or nil
+            local color = options.color or nil
+            local isActive = options.active or false
+            local label = options.label or nil
+            
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 1, 0)
+            
+            if color then
+                btn.BackgroundColor3 = color
+                btn.BackgroundTransparency = 0.2
+            else
+                btn.BackgroundColor3 = settings.ElementBackgroundColor or Color3.fromRGB(35, 35, 45)
+                btn.BackgroundTransparency = 0.3
+            end
+            
+            btn.Text = name
+            btn.TextColor3 = useAutoContrast and GetContrastColor(btn.BackgroundColor3) or Color3.new(1, 1, 1)
+            btn.TextTransparency = 0
+            btn.Font = Enum.Font.GothamMedium
+            btn.TextSize = 12
+            btn.TextXAlignment = "Center"
+            btn.AutoButtonColor = false
+            btn.Name = name
+            btn.Parent = grid
+            btn.ClipsDescendants = true
+            
+            -- Corner
+            local corner = Instance.new("UICorner", btn)
+            corner.CornerRadius = UDim.new(0, 6)
+            
+            -- Stroke
+            local stroke = Instance.new("UIStroke", btn)
+            stroke.Color = ACCENT
+            stroke.Thickness = 1
+            stroke.Transparency = 0.6
+            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            
+            -- Glow Stroke
+            local glow = AddGlowStroke(btn, ACCENT, 1, 2, 0.85)
+            if glow then
+                glow.Transparency = 1
+            end
+            
+            -- Icon
+            local iconImg = nil
+            if icon or image then
+                local iconSource = icon or image
+                local iconImage = ResolveIcon(iconSource)
+                if iconImage then
+                    iconImg = Instance.new("ImageLabel", btn)
+                    iconImg.Size = UDim2.new(0, 18, 0, 18)
+                    iconImg.Position = UDim2.new(0, 8, 0.5, -9)
+                    iconImg.BackgroundTransparency = 1
+                    iconImg.Image = iconImage
+                    iconImg.ImageColor3 = Color3.new(1, 1, 1)
+                    iconImg.ScaleType = Enum.ScaleType.Crop
+                    iconImg.ZIndex = 2
+                    
+                    local iconCorner = Instance.new("UICorner", iconImg)
+                    iconCorner.CornerRadius = UDim.new(0, 4)
+                    
+                    btn.Text = "  " .. name
+                end
+            end
+            
+            -- Label nhỏ
+            if label then
+                local labelText = Instance.new("TextLabel", btn)
+                labelText.Size = UDim2.new(0.35, 0, 0, 14)
+                labelText.Position = UDim2.new(0.62, 0, 0, -2)
+                labelText.BackgroundTransparency = 1
+                labelText.Text = label
+                labelText.TextColor3 = ACCENT
+                labelText.TextTransparency = 0.4
+                labelText.Font = Enum.Font.GothamBold
+                labelText.TextSize = 7
+                labelText.TextXAlignment = "Right"
+                labelText.ZIndex = 3
+            end
+            
+            -- Hover Effect
+            btn.MouseEnter:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = 0.1,
+                    BackgroundColor3 = ACCENT
+                }):Play()
+                
+                if glow then
+                    TweenService:Create(glow, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Transparency = 0.5
+                    }):Play()
+                end
+                
+                TweenService:Create(stroke, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Transparency = 0
+                }):Play()
+            end)
+            
+            btn.MouseLeave:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = 0.3,
+                    BackgroundColor3 = color or settings.ElementBackgroundColor or Color3.fromRGB(35, 35, 45)
+                }):Play()
+                
+                if glow then
+                    TweenService:Create(glow, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Transparency = 1
+                    }):Play()
+                end
+                
+                TweenService:Create(stroke, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Transparency = 0.6
+                }):Play()
+            end)
+            
+            -- Click Effect
+            btn.MouseButton1Click:Connect(function()
+                PlaySound("Element")
+                CreateClickScaleEffect(btn)
+                
+                if callback then
+                    local success, err = pcall(callback)
+                    if not success then
+                        NoirUI:Notify("Error", "Lỗi: " .. tostring(err), "x", "Error")
+                    end
+                end
+            end)
+            
+            -- Active state
+            local activeState = false
+            function btn:SetActive(active)
+                activeState = active
+                if active then
+                    TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 0,
+                        BackgroundColor3 = ACCENT
+                    }):Play()
+                    if glow then
+                        TweenService:Create(glow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Transparency = 0.2
+                        }):Play()
+                    end
+                    stroke.Transparency = 0
+                    btn.TextColor3 = GetContrastColor(ACCENT)
+                else
+                    TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 0.3,
+                        BackgroundColor3 = color or settings.ElementBackgroundColor or Color3.fromRGB(35, 35, 45)
+                    }):Play()
+                    if glow then
+                        TweenService:Create(glow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Transparency = 1
+                        }):Play()
+                    end
+                    stroke.Transparency = 0.6
+                    btn.TextColor3 = useAutoContrast and GetContrastColor(btn.BackgroundColor3) or Color3.new(1, 1, 1)
+                end
+            end
+            
+            function btn:GetActive()
+                return activeState
+            end
+            
+            function btn:SetName(newName)
+                btn.Name = newName
+                btn.Text = (iconImg and "  " or "") .. newName
+            end
+            
+            function btn:SetIcon(newIcon)
+                local iconImage = ResolveIcon(newIcon)
+                if iconImage and iconImg then
+                    iconImg.Image = iconImage
+                    btn.Text = "  " .. btn.Name
+                end
+            end
+            
+            return btn
+        end
+        
+        -- Tạo Shader Button
+        function Tab:CreateShaderButton(grid, options)
+            if not options.label then
+                options.label = "SHADER"
+            end
+            
+            local btn = Tab:CreateGridButton(grid, options)
+            
+            local stroke = btn:FindFirstChildWhichIsA("UIStroke")
+            if stroke then
+                stroke.Thickness = 1.5
+            end
+            
+            return btn
+        end
+        
+        -- Tạo Shader Grid (nhiều button cùng lúc)
+        function Tab:CreateShaderGrid(columns, cellHeight, spacing, shaders)
+            local grid = Tab:CreateGrid(columns, cellHeight, spacing)
+            local buttons = {}
+            
+            for _, shader in ipairs(shaders or {}) do
+                local btn = Tab:CreateShaderButton(grid, shader)
+                table.insert(buttons, btn)
+            end
+            
+            return grid, buttons
         end
         
         -- Lưu button để TabGroup có thể di chuyển
