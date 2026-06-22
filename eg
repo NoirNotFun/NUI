@@ -1236,9 +1236,9 @@ function NoirUI:CreateWindow(settings)
     local SideStroke = Instance.new("UIStroke", Side)
     SideStroke.Color = ACCENT
     SideStroke.Thickness = 1
-    SideStroke.Transparency = 0
+    SideStroke.Transparency = 0.7
     -- Glow Stroke: dùng mặc định (1+4=5px, mờ 0.8)
-    AddGlowStroke(Side, ACCENT, 1, 0.75, 0.85)   -- glow dày 4px, mờ 0.85
+    AddGlowStroke(Side, ACCENT, 1, 1, 0.85)   -- glow dày 4px, mờ 0.85
     
     local TScroll = Instance.new("ScrollingFrame", Side)
     TScroll.Size = UDim2.new(1, 0, 1, -55)
@@ -1286,7 +1286,7 @@ function NoirUI:CreateWindow(settings)
     ContStroke.Thickness = 1
     ContStroke.Transparency = 0.7
     -- Glow Stroke: dùng mặc định (1+4=5px, mờ 0.8)
-    AddGlowStroke(Cont, ACCENT, 1, 0.75, 0.7)    -- glow dày 6px, mờ 0.7
+    AddGlowStroke(Cont, ACCENT, 1, 1, 0.7)    -- glow dày 6px, mờ 0.7
     
     -- FLOAT BUTTON CLICK
     TBtn.MouseButton1Click:Connect(function()
