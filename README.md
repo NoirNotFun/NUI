@@ -1,4 +1,4 @@
-📘 NoirUI V3 Ultimate - Full Documentation
+📘 NoirUI V3 Ultimate - Hướng Dẫn Nhanh
 
 ---
 
@@ -10,374 +10,244 @@ local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirGo
 
 ---
 
-⚙️ Tạo Cửa Sổ (CreateWindow)
-
-<details>
-<summary><b>📌 Nhấn để xem tất cả tham số CreateWindow</b></summary>
-
-🧩 Tham số cốt lõi
-
-· Name (string) – Mặc định: "NOIR HUB" – Tiêu đề cửa sổ
-· Accent (Color3) – Mặc định: RGB(170,85,255) – Màu chủ đạo (viền, glow, nút)
-· AutoContrast (bool) – Mặc định: false – Tự động điều chỉnh màu chữ tương phản với nền
-· UseGlow (bool) – Mặc định: false – Bật hiệu ứng glow aura xung quanh cửa sổ
-· Icon (string/number) – Mặc định: nil – Icon cho nút float (tên Lucide hoặc rbxassetid)
-· LogoID (string/number) – Mặc định: nil – Logo hiển thị trên header
-· DefaultPosition (UDim2) – Mặc định: (0.5,-210,0.5,-150) – Vị trí khởi tạo cửa sổ chính
-· FloatDefaultPosition (UDim2) – Mặc định: (0,15,0.5,-22) – Vị trí nút float
-· FloatSize (number) – Mặc định: 45 – Kích thước nút float
-· FloatIconSize (number) – Mặc định: 24 – Kích thước icon trong float
-· FloatCornerRadius (number) – Mặc định: 12 – Độ bo tròn nút float
-
-🎨 Màu nền & Blur
-
-· MainBgColor (Color3) – Mặc định: (10,10,10) – Màu nền chính
-· MainBgTransparency (number) – Mặc định: 0 – Độ trong suốt nền chính
-· MainBlur (number 0-1) – Mặc định: 0 – Lớp tối phủ lên nền chính
-· LoadingBlur (number 0-1) – Mặc định: 0 – Lớp tối màn hình loading
-· KeyBlur (number 0-1) – Mặc định: 0 – Lớp tối key system
-· NotificationBlur (number 0-1) – Mặc định: 0 – Lớp tối thông báo
-· ConfirmBlur (number 0-1) – Mặc định: 0 – Lớp tối hộp thoại xác nhận
-· ElementBackgroundColor (Color3) – Mặc định: nil – Màu nền chung cho tất cả element (button, toggle, slider, dropdown...)
-· SidebarBackgroundColor (Color3) – Mặc định: nil – Màu nền sidebar (thanh tab bên trái)
-· SidebarTransparency (number 0-1) – Mặc định: 0.8 – Độ trong suốt sidebar
-· TabBackgroundColor (Color3) – Mặc định: nil – Màu nền từng tab (khi chưa chọn)
-· ConfirmBackgroundColor (Color3) – Mặc định: (15,15,15) – Màu nền hộp thoại xác nhận
-· NotificationBackgroundColor (Color3) – Mặc định: (15,15,15) – Màu nền thông báo
-
-🖼️ Nền ảnh (tùy chọn)
-
-Cấu trúc: { Image = "rbxassetid://..." hoặc "http://...", Transparency = 0.5 }
-
-· Background – Ảnh nền cửa sổ chính
-· LoadingBackground – Ảnh nền loading
-· KeyBackground – Ảnh nền key system
-· NotificationBackground – Ảnh nền thông báo
-· FloatBackground – Ảnh nền nút float
-
-🔑 Key System
-
-· KeySystem (bool) – Mặc định: false – Bật hệ thống key
-· KeySettings (table) – Mặc định: nil – Cấu hình key system
-
-Cấu trúc KeySettings:
-
-```lua
-{
-    Title = "KEY SYSTEM",
-    Subtitle = "Vui lòng nhập key",
-    Note = "Liên hệ admin để lấy key",
-    Key = "mypassword",      -- hoặc {"key1", "key2"}
-    SaveKey = true,          -- lưu vào file
-    FileName = "NoirKey"     -- tên file lưu (không cần đuôi)
-}
-```
-
-🎵 Background Music
-
-· BackgroundMusic (table) – Mặc định: nil – Cấu hình nhạc nền
-
-Cấu trúc BackgroundMusic:
-
-```lua
-{
-    Enabled = true,
-    AutoPlay = true,
-    Volume = 0.3,
-    SingleTrack = 1234567890,           -- rbxassetid
-    -- hoặc Playlist = {123, 456, 789},
-    LoopMode = "single"                 -- "single", "playlist", "off"
-}
-```
-
-</details>
-
-Ví dụ tạo Window đầy đủ:
+⚙️ Tạo Window
 
 ```lua
 local Window = NoirUI:CreateWindow({
-    Name = "My Custom UI",
-    Accent = Color3.fromRGB(0, 200, 255),
-    AutoContrast = true,
+    Name = "Tiêu đề",
+    Accent = Color3.fromRGB(255, 100, 100),
     UseGlow = true,
-    MainBgColor = Color3.fromRGB(20, 20, 30),
-    MainBlur = 0.3,
-    ElementBackgroundColor = Color3.fromRGB(40, 40, 50),
-    SidebarBackgroundColor = Color3.fromRGB(15, 15, 25),
-    TabBackgroundColor = Color3.fromRGB(30, 30, 45),
-    Icon = "home",
-    BackgroundMusic = {
-        Enabled = true,
-        AutoPlay = true,
-        SingleTrack = 1234567890,
-        Volume = 0.3
-    }
+    AutoContrast = true
 })
 ```
 
 ---
 
-📑 Tạo Tab
+📌 Các Tham Số CreateWindow (Dạng Gọn)
 
 ```lua
-local Tab = Window:CreateTab("Tên Tab", "icon")
-```
+{
+    -- CORE
+    Name = "NOIR HUB",                              -- string: Tiêu đề
+    Accent = Color3.fromRGB(170, 85, 255),         -- Color3: Màu chủ đạo
+    AutoContrast = false,                          -- bool: Tự động tương phản chữ
+    UseGlow = false,                               -- bool: Bật glow viền
+    Icon = nil,                                    -- string/number: Icon float
+    LogoID = nil,                                  -- string/number: Logo header
+    DefaultPosition = UDim2.new(0.5, -210, 0.5, -150),
+    FloatDefaultPosition = UDim2.new(0, 15, 0.5, -22),
+    FloatSize = 45,
+    FloatIconSize = 24,
+    FloatCornerRadius = 12,
 
-· icon: tên icon từ Lucide hoặc rbxassetid://...
+    -- MÀU NỀN & BLUR
+    MainBgColor = Color3.fromRGB(10, 10, 10),
+    MainBgTransparency = 0,
+    MainBlur = 0,                                   -- 0-1: Lớp tối
+    LoadingBlur = 0,
+    KeyBlur = 0,
+    NotificationBlur = 0,
+    ConfirmBlur = 0,
+    ElementBackgroundColor = nil,                   -- Màu nền element
+    SidebarBackgroundColor = nil,                   -- Màu nền sidebar
+    SidebarTransparency = 0.8,
+    TabBackgroundColor = nil,                       -- Màu nền tab
+    ConfirmBackgroundColor = Color3.fromRGB(15,15,15),
+    NotificationBackgroundColor = Color3.fromRGB(15,15,15),
+
+    -- NỀN ẢNH (tùy chọn)
+    Background = nil,                               -- {Image = "...", Transparency = 0}
+    LoadingBackground = nil,
+    KeyBackground = nil,
+    NotificationBackground = nil,
+    FloatBackground = nil,
+
+    -- KEY SYSTEM
+    KeySystem = false,
+    KeySettings = {
+        Title = "KEY SYSTEM",
+        Subtitle = "Nhập key",
+        Note = "Liên hệ admin",
+        Key = "password",                           -- hoặc {"key1","key2"}
+        SaveKey = false,
+        FileName = "NoirKey"
+    },
+
+    -- NHẠC NỀN
+    BackgroundMusic = {
+        Enabled = false,
+        AutoPlay = false,
+        Volume = 0.3,
+        SingleTrack = nil,                          -- rbxassetid
+        Playlist = {},                              -- {id1, id2, ...}
+        LoopMode = "single"                         -- "single", "playlist", "off"
+    }
+}
+```
 
 ---
 
-🧩 Các Element Trong Tab
+📑 Tab & Element
 
-<details>
-<summary><b>📌 Nhấn để xem tất cả Element</b></summary>
-
-1. Label (Nhãn văn bản)
+Tạo Tab
 
 ```lua
+local Tab = Window:CreateTab("Tên", "icon")
+```
+
+Các Element
+
+```lua
+-- Label
 Tab:CreateLabel("Nội dung")
--- Cập nhật động:
-Tab:CreateLabel(function() return "Giá trị: " .. someVariable end)
-```
+Tab:CreateLabel(function() return "Dynamic" end)
 
-2. Section (Phần nhóm)
+-- Section (nhóm)
+Tab:CreateSection("Tên", true)  -- true = ẩn line
 
-```lua
-local section = Tab:CreateSection("Tên Section", true) -- true: ẩn đường kẻ
--- Các element tiếp theo sẽ nằm trong section này
-```
-
-3. Paragraph (Khối văn bản)
-
-```lua
+-- Paragraph
 Tab:CreateParagraph({
     Title = "Tiêu đề",
-    Content = "Nội dung mô tả dài..."
+    Content = "Nội dung..."
 })
-```
 
-4. Button (Nút bấm)
-
-```lua
+-- Button
 Tab:CreateButton({
-    Name = "Tên nút",
-    Subtitle = "Phụ đề (tùy chọn)",
-    Align = false,  -- false: căn trái, true: căn giữa
-    Callback = function() print("Đã bấm!") end
+    Name = "Nút",
+    Subtitle = "Mô tả",
+    Align = false,
+    Callback = function() end
 })
-```
 
-5. Toggle (Công tắc)
-
-```lua
+-- Toggle
 Tab:CreateToggle({
-    Name = "Bật chức năng",
+    Name = "Công tắc",
     Subtitle = "Mô tả",
     Default = true,
-    Callback = function(state) print(state) end
+    Callback = function(state) end
 })
-```
 
-6. Slider (Thanh trượt)
-
-```lua
+-- Slider
 Tab:CreateSlider({
-    Name = "Âm lượng",
-    Subtitle = "Điều chỉnh âm lượng",
-    range = {0, 100},   -- [min, max]
-    increment = 5,      -- bước nhảy
+    Name = "Thanh trượt",
+    Subtitle = "Mô tả",
+    range = {0, 100},
+    increment = 5,
     Default = 50,
-    Callback = function(value) print(value) end
+    Callback = function(value) end
 })
-```
 
-7. Color Picker (Chọn màu)
-
-```lua
+-- Color Picker
 Tab:CreateColorPicker({
     Name = "Chọn màu",
-    Subtitle = "Màu accent",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(color) print(color) end
+    Subtitle = "Mô tả",
+    Default = Color3.fromRGB(255,0,0),
+    Callback = function(color) end
 })
-```
 
-8. Dropdown (Thả xuống)
-
-```lua
--- Danh sách tĩnh:
+-- Dropdown (tĩnh)
 Tab:CreateDropdown({
-    Name = "Chọn server",
-    Subtitle = "Chọn vùng",
-    Options = {"US", "EU", "ASIA"},
-    Default = "US",
-    Callback = function(option) print(option) end
+    Name = "Chọn",
+    Subtitle = "Mô tả",
+    Options = {"A", "B", "C"},
+    Default = "A",
+    Callback = function(opt) end
 })
 
--- Danh sách động:
+-- Dropdown (động)
 Tab:CreateDropdown({
-    Name = "Danh sách động",
-    GetOptions = function() return {"A", "B", "C"} end,
-    RefreshOnOpen = true,  -- cập nhật mỗi khi mở
-    Callback = function(opt) print(opt) end
+    Name = "Chọn",
+    GetOptions = function() return {"X","Y","Z"} end,
+    RefreshOnOpen = true,
+    Callback = function(opt) end
 })
-```
 
-9. TextBox (Ô nhập)
-
-```lua
+-- TextBox
 Tab:CreateTextBox({
-    Name = "Tên người dùng",
-    Subtitle = "Nhập tên",
-    Default = "Noir",
-    Callback = function(text) print(text) end
+    Name = "Nhập",
+    Subtitle = "Mô tả",
+    Default = "",
+    Callback = function(text) end
 })
-```
 
-10. RunBox (Thực thi lệnh)
-
-```lua
+-- RunBox (thực thi lệnh)
 Tab:CreateRunBox({
-    Placeholder = "Nhập lệnh hoặc code...",
-    ClearOnExecute = true  -- xóa sau khi chạy
+    Placeholder = "Nhập lệnh...",
+    ClearOnExecute = true
 })
 ```
 
-Hỗ trợ: .command args, loadstring("..."), Lua code trực tiếp.
-
-</details>
-
 ---
 
-🔔 Thông Báo (Notification)
+🔔 Các Hàm Tiện Ích
 
 ```lua
+-- Thông báo
 NoirUI:Notify("Tiêu đề", "Nội dung", "icon", "Success")
-```
 
-· icon: tên Lucide hoặc rbxassetid (có thể để nil)
-· soundType: "Success", "Error", "Notification" (mặc định)
-
----
-
-🎵 Hệ Thống Nhạc Nền
-
-<details>
-<summary><b>📌 Các hàm điều khiển nhạc</b></summary>
-
-```lua
+-- Nhạc
 NoirUI:StartMusic()
 NoirUI:PauseMusic()
 NoirUI:ResumeMusic()
 NoirUI:StopMusic()
 NoirUI:SetMusicVolume(0.5)
-NoirUI:AddMusicTrack(1234567890)
-NoirUI:RemoveMusicTrack(1)        -- xóa theo index
-NoirUI:SetMusicLoopMode("playlist") -- "single", "playlist", "off"
-```
+NoirUI:AddMusicTrack(id)
+NoirUI:RemoveMusicTrack(index)
+NoirUI:SetMusicLoopMode("playlist")
 
-</details>
-
----
-
-🔊 Âm Thanh Tương Tác
-
-<details>
-<summary><b>📌 Các hàm tùy chỉnh âm thanh</b></summary>
-
-```lua
--- Đặt âm thanh tùy chỉnh cho từng hành động
+-- Âm thanh
 NoirUI:SetCustomSound("Click", "rbxassetid://123")
-NoirUI:SetCustomSound("Tab", "...")
-NoirUI:SetCustomSound("Element", "...")
-NoirUI:SetCustomSound("Open", "...")
-NoirUI:SetCustomSound("Close", "...")
-NoirUI:SetCustomSound("Notification", "...")
-NoirUI:SetCustomSound("Error", "...")
-NoirUI:SetCustomSound("Success", "...")
-
-NoirUI:ToggleSound(true)   -- bật/tắt
+NoirUI:ToggleSound(true)
 NoirUI:SetVolume(0.8)
-```
 
-</details>
-
----
-
-🛠️ Lệnh Tùy Chỉnh (Custom Commands)
-
-```lua
+-- Lệnh tùy chỉnh
 NoirUI:RegisterCommand("hello", function(args)
-    NoirUI:Notify("Hello", "Bạn đã gõ: " .. table.concat(args, " "))
+    print(args)
 end)
--- Trong RunBox gõ: .hello xin chào
-```
 
----
-
-🗑️ Hủy UI
-
-```lua
+-- Hủy UI
 NoirUI:Destroy()
 ```
 
 ---
 
-📝 Ví Dụ Đầy Đủ
+📝 Ví Dụ Đơn Giản
 
 ```lua
 local NoirUI = loadstring(game:HttpGet("..."))()
 local Window = NoirUI:CreateWindow({
     Name = "My UI",
-    Accent = Color3.fromRGB(255, 100, 100),
+    Accent = Color3.fromRGB(255,100,100),
     UseGlow = true,
-    AutoContrast = true,
-    ElementBackgroundColor = Color3.fromRGB(30, 30, 40),
-    SidebarBackgroundColor = Color3.fromRGB(20, 20, 30),
-    TabBackgroundColor = Color3.fromRGB(35, 35, 45),
-    MainBlur = 0.2,
     Icon = "home"
 })
 
--- Tab chính
-local mainTab = Window:CreateTab("Chính", "home")
-mainTab:CreateSection("Cài đặt")
-mainTab:CreateToggle({
-    Name = "Bật tự động",
-    Default = true,
-    Callback = function(s) print(s) end
-})
-mainTab:CreateButton({
-    Name = "Chạy",
-    Callback = function() 
-        NoirUI:Notify("Thông báo", "Đã chạy!", "check", "Success") 
+local tab = Window:CreateTab("Chính", "home")
+tab:CreateButton({
+    Name = "Click me",
+    Callback = function()
+        NoirUI:Notify("Done!", "Clicked!", "check", "Success")
     end
 })
 
--- Tab cài đặt
-local settingTab = Window:CreateTab("Cài đặt", "settings")
-settingTab:CreateSlider({
-    Name = "Âm lượng",
-    range = {0, 100},
-    Default = 50,
-    Callback = function(v) NoirUI:SetVolume(v / 100) end
-})
-settingTab:CreateColorPicker({
-    Name = "Màu accent",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(c) print(c) end
+tab:CreateToggle({
+    Name = "Enable",
+    Default = true,
+    Callback = function(state)
+        print(state)
+    end
 })
 ```
 
 ---
 
-💡 Ghi Chú Quan Trọng
+💡 Mẹo
 
-· Blur là một lớp phủ tối, không phải Gaussian blur thực sự – giúp làm tối nền để làm nổi bật nội dung.
-· Với AutoContrast = true, màu chữ sẽ tự động tương phản với màu nền của từng element.
-· Tất cả element đều hỗ trợ Subtitle để thêm mô tả bên dưới.
-· Bạn có thể tạo nhiều tab, mỗi tab chứa nhiều section và element.
+· Blur = 0.2 là đủ để làm nổi bật nội dung mà không quá tối.
+· AutoContrast = true giúp chữ luôn đọc được trên mọi màu nền.
+· ElementBackgroundColor áp dụng cho tất cả element trong tab (button, toggle, slider, dropdown...).
+· Dùng Subtitle để thêm mô tả cho từng element.
 
 ---
 
-Chúc bạn tạo được giao diện đẹp mắt và chuyên nghiệp! 🚀
+Chúc bạn thành công! 🚀
