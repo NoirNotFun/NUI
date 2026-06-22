@@ -1236,7 +1236,7 @@ function NoirUI:CreateWindow(settings)
     
     local SideStroke = Instance.new("UIStroke", Side)
     SideStroke.Color = ACCENT
-    SideStroke.Thickness = 1
+    SideStroke.Thickness = 0.5
     SideStroke.Transparency = 0.7
     -- Glow Stroke
     AddGlowStroke(Side, ACCENT, 1)
@@ -1284,7 +1284,7 @@ function NoirUI:CreateWindow(settings)
     
     local ContStroke = Instance.new("UIStroke", Cont)
     ContStroke.Color = ACCENT
-    ContStroke.Thickness = 1
+    ContStroke.Thickness = 0.5
     ContStroke.Transparency = 0.7
     -- Glow Stroke
     AddGlowStroke(Cont, ACCENT, 1)
