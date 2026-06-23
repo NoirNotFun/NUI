@@ -5,7 +5,7 @@
 🚀 Cài Đặt
 
 ```lua
-local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirGoodBoi/UI/refs/heads/main/ui.lua"))()
+local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirNotFun/NUI/refs/heads/main/NoirUI.lua"))()
 ```
 
 ---
