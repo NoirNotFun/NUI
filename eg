@@ -4,19 +4,30 @@
 	Lua Scripter: NoirNF, Adono
 	Executor Compatibility Tester: Adono
 	Animation Engineer: Adono
+	Version: 3.0 Ultimate
+	Features: Glow Stroke, Blur Overlay, TabGroup, Minimize, Icon Button, Grid, Badge, Segmented Control, Progress Bar, Radio Group, Card, Loading Spinner, Undo/Redo, Particle Background, Ripple Effect, Neon Pulse, Glitch Effect, Pop Effect, Bounce Effect, Slide Effect, Floating Animation, Confetti Burst, Typing Effect
 ]]
 
---Core
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
 
 local OldGui = game.CoreGui:FindFirstChild("NoirUI_V3_Ultimate")
 if OldGui then OldGui:Destroy() end
 
-local NoirUI = { Notifications = {}, ActiveConfirmFrame = nil, CustomCommands = {}, Connections = {}, Glows = {}, TabGroups = {} }
+local NoirUI = { 
+    Notifications = {}, 
+    ActiveConfirmFrame = nil, 
+    CustomCommands = {}, 
+    Connections = {}, 
+    Glows = {},
+    TabGroups = {},
+    History = { max = 20, undo = {}, redo = {} }
+}
 
 local LucideIcons = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirGoodBoi/UI/refs/heads/main/icons.lua"))()
 
@@ -38,10 +49,6 @@ local function ResolveIcon(iconInput)
     return nil
 end
 
--- ============================================
--- AUTO CONTRAST TEXT FUNCTIONS
--- ============================================
-
 local function GetColorBrightness(color)
     return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B)
 end
@@ -54,10 +61,6 @@ local function GetContrastColor(backgroundColor)
         return Color3.fromRGB(255, 255, 255)
     end
 end
-
--- ============================================
--- GLOW STROKE (NEON) - CÓ THỂ TÙY CHỈNH ĐỘ DÀY & MỜ
--- ============================================
 
 local function AddGlowStroke(parent, accentColor, baseThickness, glowThickness, glowTransparency)
     if not parent then return nil end
@@ -72,10 +75,6 @@ local function AddGlowStroke(parent, accentColor, baseThickness, glowThickness, 
     glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     return glow
 end
-
--- ============================================
--- BLUR OVERLAY (CÓ CẮT THEO VIỀN)
--- ============================================
 
 local function AddBlurOverlay(parent, blurAmount)
     if not parent or not blurAmount or blurAmount <= 0 then return nil end
@@ -106,10 +105,6 @@ local function AddBlurOverlay(parent, blurAmount)
     
     return wrapper
 end
-
--- ============================================
--- ANIMATION FUNCTIONS
--- ============================================
 
 local function CreateClickScaleEffect(button)
     if not button then return end
@@ -189,9 +184,243 @@ local function CreateHoverEffect(button)
     end)
 end
 
--- ============================================
--- SOUND SETTINGS
--- ============================================
+local function CreateRippleEffect(button, color, duration)
+    duration = duration or 0.5
+    color = color or Color3.fromRGB(255, 255, 255)
+    local clickConn = button.MouseButton1Click:Connect(function()
+        local ripple = Instance.new("Frame", button)
+        ripple.Size = UDim2.new(0, 0, 0, 0)
+        ripple.BackgroundColor3 = color
+        ripple.BackgroundTransparency = 0.6
+        Instance.new("UICorner", ripple).CornerRadius = UDim.new(1, 0)
+        ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
+        ripple.ZIndex = 10
+        local size = math.max(button.AbsoluteSize.X, button.AbsoluteSize.Y)
+        TweenService:Create(ripple, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, size * 2, 0, size * 2),
+            BackgroundTransparency = 1
+        }):Play()
+        task.delay(duration, function() ripple:Destroy() end)
+    end)
+    return clickConn
+end
+
+local function CreatePulseEffect(frame, scale, speed)
+    scale = scale or 1.1
+    speed = speed or 1
+    local origSize = frame.Size
+    local conn = RunService.Heartbeat:Connect(function()
+        if not frame.Parent then conn:Disconnect() return end
+        local pulse = math.sin(tick() * speed) * 0.05 + 1
+        local newScale = 1 + (pulse - 1) * (scale - 1)
+        frame.Size = UDim2.new(origSize.X.Scale, origSize.X.Offset * newScale, origSize.Y.Scale, origSize.Y.Offset * newScale)
+    end)
+    return conn
+end
+
+local function BounceEffect(frame, height, duration)
+    height = height or 20
+    duration = duration or 0.5
+    local startPos = frame.Position
+    TweenService:Create(frame, TweenInfo.new(duration, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(startPos.X.Scale, startPos.X.Offset, startPos.Y.Scale, startPos.Y.Offset - height)
+    }):Play()
+end
+
+local function PopEffect(frame, scale)
+    scale = scale or 1.2
+    local origSize = frame.Size
+    TweenService:Create(frame, TweenInfo.new(0.15), {
+        Size = UDim2.new(origSize.X.Scale, origSize.X.Offset * scale, origSize.Y.Scale, origSize.Y.Offset * scale)
+    }):Play()
+    task.wait(0.15)
+    TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = origSize
+    }):Play()
+end
+
+local function ShakeEffect(frame, intensity, duration)
+    intensity = intensity or 5
+    duration = duration or 0.3
+    local startPos = frame.Position
+    for i = 1, 6 do
+        local offsetX = (i % 2 == 0 and intensity or -intensity) * (1 - i/6)
+        local offsetY = (i % 3 == 0 and intensity or -intensity) * (1 - i/6) * 0.5
+        TweenService:Create(frame, TweenInfo.new(duration/6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + offsetX, startPos.Y.Scale, startPos.Y.Offset + offsetY)
+        }):Play()
+        task.wait(duration/6)
+    end
+    TweenService:Create(frame, TweenInfo.new(0.1), { Position = startPos }):Play()
+end
+
+local function SlideIn(frame, direction, duration)
+    direction = direction or "left"
+    duration = duration or 0.4
+    local pos = frame.Position
+    local offset = 50
+    if direction == "left" then
+        frame.Position = UDim2.new(pos.X.Scale, pos.X.Offset - offset, pos.Y.Scale, pos.Y.Offset)
+    elseif direction == "right" then
+        frame.Position = UDim2.new(pos.X.Scale, pos.X.Offset + offset, pos.Y.Scale, pos.Y.Offset)
+    elseif direction == "top" then
+        frame.Position = UDim2.new(pos.X.Scale, pos.X.Offset, pos.Y.Scale, pos.Y.Offset - offset)
+    elseif direction == "bottom" then
+        frame.Position = UDim2.new(pos.X.Scale, pos.X.Offset, pos.Y.Scale, pos.Y.Offset + offset)
+    end
+    frame.BackgroundTransparency = 1
+    frame.Visible = true
+    TweenService:Create(frame, TweenInfo.new(duration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Position = pos,
+        BackgroundTransparency = 0
+    }):Play()
+end
+
+local function CreateFloatingAnimation(frame, range, speed)
+    range = range or 5
+    speed = speed or 1
+    local startPos = frame.Position
+    local conn = RunService.RenderStepped:Connect(function()
+        if not frame.Parent then conn:Disconnect() return end
+        local offset = math.sin(tick() * speed) * range
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset, startPos.Y.Scale, startPos.Y.Offset + offset)
+    end)
+    return conn
+end
+
+local function CreateNeonPulse(frame, color, speed)
+    local stroke = frame:FindFirstChildWhichIsA("UIStroke")
+    if not stroke then
+        stroke = Instance.new("UIStroke", frame)
+        stroke.Thickness = 2
+        stroke.Color = color or Color3.fromRGB(170, 85, 255)
+    end
+    local pulse = 0
+    local conn = RunService.RenderStepped:Connect(function()
+        if not frame.Parent then conn:Disconnect() return end
+        pulse = (pulse + (speed or 0.02)) % 1
+        local alpha = math.abs(math.sin(pulse * math.pi))
+        stroke.Transparency = 1 - alpha
+        stroke.Thickness = 1 + alpha * 3
+    end)
+    return conn
+end
+
+local function CreateMorphingGradient(frame, colors, speed)
+    speed = speed or 1
+    local gradient = frame:FindFirstChildOfClass("UIGradient")
+    if not gradient then
+        gradient = Instance.new("UIGradient", frame)
+        gradient.Rotation = 45
+    end
+    local keypoints = {}
+    for i, color in ipairs(colors or {Color3.fromRGB(255,0,0), Color3.fromRGB(0,255,0), Color3.fromRGB(0,0,255)}) do
+        local position = (i - 1) / (#colors - 1)
+        table.insert(keypoints, ColorSequenceKeypoint.new(position, color))
+    end
+    gradient.Color = ColorSequence.new(keypoints)
+    local offset = 0
+    local conn = RunService.RenderStepped:Connect(function()
+        if not frame.Parent then conn:Disconnect() return end
+        offset = (offset + 0.01 * speed) % 1
+        gradient.Offset = Vector2.new(offset, 0)
+    end)
+    return conn
+end
+
+local function CreateTypingEffect(label, text, speed)
+    speed = speed or 0.05
+    local currentText = ""
+    label.Text = ""
+    local conn = RunService.Heartbeat:Connect(function()
+        if not label.Parent then conn:Disconnect() return end
+        if #currentText < #text then
+            currentText = text:sub(1, #currentText + 1)
+            label.Text = currentText
+        else
+            conn:Disconnect()
+        end
+    end)
+    return conn
+end
+
+local function CreateGlitchEffect(label, interval)
+    interval = interval or 2
+    local originalText = label.Text
+    local glitchChars = {"█", "▓", "▒", "░", "■", "□", "▄", "▀"}
+    local conn = RunService.Heartbeat:Connect(function()
+        if not label.Parent then conn:Disconnect() return end
+        if math.random() > 0.05 then return end
+        local glitch = ""
+        for i = 1, #originalText do
+            if math.random() < 0.3 then
+                glitch = glitch .. glitchChars[math.random(#glitchChars)]
+            else
+                glitch = glitch .. originalText:sub(i, i)
+            end
+        end
+        label.Text = glitch
+        label.TextColor3 = Color3.fromRGB(255 - math.random(0, 50), 255 - math.random(0, 50), 255 - math.random(0, 50))
+        task.delay(0.05, function()
+            label.Text = originalText
+            label.TextColor3 = Color3.new(1,1,1)
+        end)
+    end)
+    return conn
+end
+
+local function CreateParticleBackground(parent, color, count)
+    count = count or 30
+    local particles = {}
+    color = color or Color3.fromRGB(170, 85, 255)
+    for i = 1, count do
+        local particle = Instance.new("Frame", parent)
+        particle.Size = UDim2.new(0, math.random(2, 4), 0, math.random(2, 4))
+        particle.BackgroundColor3 = color
+        particle.BackgroundTransparency = 0.5
+        Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
+        particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+        particle.ZIndex = 0
+        local speedX = (math.random() - 0.5) * 0.5
+        local speedY = (math.random() - 0.5) * 0.5
+        table.insert(particles, { obj = particle, speedX = speedX, speedY = speedY })
+    end
+    local conn = RunService.RenderStepped:Connect(function()
+        for _, p in ipairs(particles) do
+            if not p.obj.Parent then continue end
+            local newX = p.obj.Position.X.Scale + p.speedX * 0.01
+            local newY = p.obj.Position.Y.Scale + p.speedY * 0.01
+            if newX > 1 or newX < 0 then p.speedX = -p.speedX end
+            if newY > 1 or newY < 0 then p.speedY = -p.speedY end
+            p.obj.Position = UDim2.new(newX, 0, newY, 0)
+        end
+    end)
+    return conn
+end
+
+local function CreateConfettiBurst(parent, count, colors)
+    count = count or 30
+    colors = colors or {Color3.fromRGB(255, 50, 50), Color3.fromRGB(50, 255, 50), Color3.fromRGB(50, 50, 255), Color3.fromRGB(255, 255, 50)}
+    for i = 1, count do
+        local confetti = Instance.new("Frame", parent)
+        confetti.Size = UDim2.new(0, math.random(4, 8), 0, math.random(4, 8))
+        confetti.BackgroundColor3 = colors[math.random(#colors)]
+        Instance.new("UICorner", confetti).CornerRadius = UDim.new(0, math.random(0, 4))
+        confetti.Position = UDim2.new(0.5, 0, 0.5, 0)
+        confetti.BackgroundTransparency = 0.8
+        confetti.ZIndex = 100
+        local angle = math.rad(math.random(0, 360))
+        local distance = math.random(50, 200)
+        local targetX = math.cos(angle) * distance
+        local targetY = math.sin(angle) * distance
+        TweenService:Create(confetti, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0.5, targetX, 0.5, targetY),
+            BackgroundTransparency = 1,
+            Rotation = math.random(0, 720)
+        }):Play()
+        task.delay(1.8, function() confetti:Destroy() end)
+    end
+end
 
 local SoundSettings = {
     Enabled = true,
@@ -378,6 +607,34 @@ function NoirUI:SetVolume(volume)
     NoirUI:Notify("🔊 Volume", "Âm lượng: " .. math.floor(volume * 100) .. "%", "volume-2")
 end
 
+function NoirUI:PushHistory(state)
+    if #NoirUI.History.undo >= NoirUI.History.max then
+        table.remove(NoirUI.History.undo, 1)
+    end
+    table.insert(NoirUI.History.undo, state)
+    NoirUI.History.redo = {}
+end
+
+function NoirUI:Undo(callback)
+    if #NoirUI.History.undo == 0 then 
+        NoirUI:Notify("⚠️ Nothing to undo", "Không có gì để quay lại", "warning", "Error")
+        return 
+    end
+    local state = table.remove(NoirUI.History.undo)
+    table.insert(NoirUI.History.redo, state)
+    if callback then callback(state) end
+end
+
+function NoirUI:Redo(callback)
+    if #NoirUI.History.redo == 0 then 
+        NoirUI:Notify("⚠️ Nothing to redo", "Không có gì để làm lại", "warning", "Error")
+        return 
+    end
+    local state = table.remove(NoirUI.History.redo)
+    table.insert(NoirUI.History.undo, state)
+    if callback then callback(state) end
+end
+
 function NoirUI:Destroy()
     StopAndCleanupMusic()
     for _, connection in pairs(NoirUI.Connections) do
@@ -387,16 +644,13 @@ function NoirUI:Destroy()
         pcall(function() notif:Destroy() end)
     end
     local gui = game.CoreGui:FindFirstChild("NoirUI_V3_Ultimate")
-    if gui then
-        gui:Destroy()
-    end
+    if gui then gui:Destroy() end
     NoirUI.Notifications = {}
     NoirUI.ActiveConfirmFrame = nil
     NoirUI.Connections = {}
     NoirUI.Glows = {}
 end
 
--- HÀM TẠO GLOW TEXT
 local function CreateGlowTextSlide(label, colors, speed)
     if not label then return nil end
     local gradient = Instance.new("UIGradient", label)
@@ -422,7 +676,6 @@ local function CreateGlowTextSlide(label, colors, speed)
     return gradient, connection
 end
 
--- HÀM TẠO GLOW AURA
 local function CreateUIGlow(frame, color, intensity, parent)
     if not frame then return nil end
     if not parent then parent = frame.Parent end
@@ -482,9 +735,6 @@ local function CreateUIGlow(frame, color, intensity, parent)
     return glow
 end
 
--- ============================================
--- SUBTITLE - Inter Font
--- ============================================
 local function AddSubtitle(parent, subtitleText, yOffset)
     if not subtitleText or subtitleText == "" then return nil end
     local subtitle = Instance.new("TextLabel", parent)
@@ -603,6 +853,18 @@ function NoirUI:CreateWindow(settings)
     settings.ConfirmBackgroundColor = settings.ConfirmBackgroundColor or Color3.fromRGB(15, 15, 15)
     settings.NotificationBackgroundColor = settings.NotificationBackgroundColor or Color3.fromRGB(15, 15, 15)
     
+    settings.UseRipple = settings.UseRipple or false
+    settings.UseParticles = settings.UseParticles or false
+    settings.UseNeon = settings.UseNeon or false
+    settings.UseGlitch = settings.UseGlitch or false
+    settings.UsePop = settings.UsePop or false
+    settings.UseBounce = settings.UseBounce or false
+    settings.UseSlide = settings.UseSlide or false
+    settings.UseFloating = settings.UseFloating or false
+    settings.UseConfetti = settings.UseConfetti or false
+    settings.UseTyping = settings.UseTyping or false
+    settings.ParticleCount = settings.ParticleCount or 30
+    
     local mainDefaultPos = settings.DefaultPosition or UDim2.new(0.5, -210, 0.5, -150)
     local floatDefaultPos = settings.FloatDefaultPosition or UDim2.new(0, 15, 0.5, -22)
     
@@ -627,8 +889,15 @@ function NoirUI:CreateWindow(settings)
     if settings.UseGlow then
         local mainGlow = CreateUIGlow(Main, ACCENT, 0.3, ScreenGui)
     end
+    if settings.UseParticles then
+        local particleConn = CreateParticleBackground(Main, ACCENT, settings.ParticleCount)
+        table.insert(NoirUI.Connections, particleConn)
+    end
+    if settings.UseNeon then
+        local neonConn = CreateNeonPulse(Main, ACCENT, 0.3)
+        table.insert(NoirUI.Connections, neonConn)
+    end
     
-    -- FLOAT BUTTON
     local floatSize = settings.FloatSize or 45
     local floatIconSize = settings.FloatIconSize or 24
     local floatCornerRadius = settings.FloatCornerRadius or 12
@@ -643,6 +912,14 @@ function NoirUI:CreateWindow(settings)
     TBtn.Visible = false
     if settings.UseGlow then
         local floatGlow = CreateUIGlow(TBtn, ACCENT, 0.4, ScreenGui)
+    end
+    if settings.UseParticles then
+        local particleConn = CreateParticleBackground(TBtn, ACCENT, 10)
+        table.insert(NoirUI.Connections, particleConn)
+    end
+    if settings.UseNeon then
+        local neonConn = CreateNeonPulse(TBtn, ACCENT, 0.3)
+        table.insert(NoirUI.Connections, neonConn)
     end
     local floatCorner = Instance.new("UICorner", TBtn)
     floatCorner.CornerRadius = UDim.new(0, floatCornerRadius)
@@ -748,7 +1025,6 @@ function NoirUI:CreateWindow(settings)
         end
     end)
     
-    -- LOADING FRAME
     local LoadingFrame = Instance.new("Frame", ScreenGui)
     LoadingFrame.Size = UDim2.new(0, 300, 0, 120)
     LoadingFrame.Position = UDim2.new(0.5, -150, 0.5, -60)
@@ -763,6 +1039,10 @@ function NoirUI:CreateWindow(settings)
     AddBlurOverlay(LoadingFrame, settings.LoadingBlur)
     if settings.UseGlow then
         local loadingGlow = CreateUIGlow(LoadingFrame, ACCENT, 0.3, ScreenGui)
+    end
+    if settings.UseNeon then
+        local neonConn = CreateNeonPulse(LoadingFrame, ACCENT, 0.3)
+        table.insert(NoirUI.Connections, neonConn)
     end
     local hasLoadingBg = SetupBackground(LoadingFrame, settings.LoadingBackground, Color3.fromRGB(12, 12, 12), 0.95)
     LoadingStroke.Transparency = hasLoadingBg and 0 or 1
@@ -788,6 +1068,13 @@ function NoirUI:CreateWindow(settings)
             Color3.fromRGB(200, 200, 200)
         }, 1.5)
     end
+    if settings.UseGlitch then
+        local glitchConn = CreateGlitchEffect(LoadingTitle, 3)
+        table.insert(NoirUI.Connections, glitchConn)
+    end
+    if settings.UseTyping then
+        CreateTypingEffect(LoadingTitle, LoadingTitle.Text, 0.05)
+    end
     local LoadingSub = Instance.new("TextLabel", LoadingFrame)
     LoadingSub.Size = UDim2.new(1, -40, 0, 20)
     LoadingSub.Position = UDim2.new(0, 20, 0, 45)
@@ -811,6 +1098,9 @@ function NoirUI:CreateWindow(settings)
     LoadingBar.BackgroundColor3 = ACCENT
     Instance.new("UICorner", LoadingBar).CornerRadius = UDim.new(1, 0)
     LoadingBar.ZIndex = 201
+    if settings.UseNeon then
+        CreateNeonPulse(LoadingBar, ACCENT, 0.3)
+    end
     local LoadingPercent = Instance.new("TextLabel", LoadingFrame)
     LoadingPercent.Size = UDim2.new(1, 0, 0, 20)
     LoadingPercent.Position = UDim2.new(0, 0, 0.85, 0)
@@ -855,6 +1145,12 @@ function NoirUI:CreateWindow(settings)
                 TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, 420, 0, 300)
                 }):Play()
+                if settings.UseBounce then
+                    BounceEffect(Main, 20, 0.5)
+                end
+                if settings.UseConfetti then
+                    CreateConfettiBurst(Main, 20)
+                end
                 PlaySound("Open")
                 if settings.BackgroundMusic and settings.BackgroundMusic.AutoPlay then
                     NoirUI:StartMusic()
@@ -899,6 +1195,10 @@ function NoirUI:CreateWindow(settings)
             if settings.UseGlow then
                 local keyGlow = CreateUIGlow(KUI, ACCENT, 0.3, ScreenGui)
             end
+            if settings.UseNeon then
+                local neonConn = CreateNeonPulse(KUI, ACCENT, 0.3)
+                table.insert(NoirUI.Connections, neonConn)
+            end
             SetupBackground(KUI, settings.KeyBackground, Color3.fromRGB(12, 12, 12), 0)
             CreateSpringEffect(KUI)
             local KT = Instance.new("TextLabel", KUI)
@@ -921,6 +1221,9 @@ function NoirUI:CreateWindow(settings)
                     Color3.fromRGB(255, 255, 255),
                     Color3.fromRGB(200, 200, 200)
                 }, 1.5)
+            end
+            if settings.UseGlitch then
+                CreateGlitchEffect(KT, 3)
             end
             local KSub = Instance.new("TextLabel", KUI)
             KSub.Size = UDim2.new(1,0,0,20)
@@ -971,8 +1274,14 @@ function NoirUI:CreateWindow(settings)
             Instance.new("UICorner", KB).CornerRadius = UDim.new(0, 6)
             KB.ZIndex = 2
             KB.AutoButtonColor = false
+            if settings.UseRipple then
+                CreateRippleEffect(KB, ACCENT, 0.3)
+            end
             KB.MouseButton1Click:Connect(function()
                 CreateClickScaleEffect(KB)
+                if settings.UsePop then
+                    PopEffect(KB, 1.1)
+                end
                 if CheckKeys(KI.Text) then
                     if KS.SaveKey and writefile then writefile(KeyPath, KI.Text) end
                     TweenService:Create(KUI, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
@@ -1021,6 +1330,14 @@ function NoirUI:CreateWindow(settings)
             Color3.fromRGB(200, 200, 200)
         }, 1.5)
     end
+    if settings.UseGlitch then
+        local glitchConn = CreateGlitchEffect(Title, 3)
+        table.insert(NoirUI.Connections, glitchConn)
+    end
+    if settings.UseNeon then
+        local neonConn = CreateNeonPulse(Title, ACCENT, 0.3)
+        table.insert(NoirUI.Connections, neonConn)
+    end
     local Btns = Instance.new("Frame", Header)
     Btns.Size = UDim2.new(0, 70, 1, 0)
     Btns.Position = UDim2.new(1, -75, 0, 0)
@@ -1030,6 +1347,13 @@ function NoirUI:CreateWindow(settings)
     BL.HorizontalAlignment = "Right"
     BL.VerticalAlignment = "Center"
     BL.Padding = UDim.new(0, 8)
+    
+    local isMinimized = false
+    local originalMainSize = Main.Size
+    local originalSideSize = nil
+    local originalContSize = nil
+    local Side = nil
+    local Cont = nil
     
     local function TopB(txt, col, cb)
         local b = Instance.new("TextButton", Btns)
@@ -1042,19 +1366,92 @@ function NoirUI:CreateWindow(settings)
         Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
         b.AutoButtonColor = false
         CreateHoverEffect(b)
+        if settings.UseRipple then
+            CreateRippleEffect(b, ACCENT, 0.3)
+        end
+        if settings.UseNeon then
+            CreateNeonPulse(b, ACCENT, 0.3)
+        end
         b.MouseButton1Click:Connect(function()
             CreateClickScaleEffect(b)
+            if settings.UsePop then
+                PopEffect(b, 1.1)
+            end
             cb()
         end)
+        return b
     end
+    
     local isM = false
     TopB("—", Color3.fromRGB(255, 200, 50), function()
         PlaySound("Click")
         isM = not isM
-        TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = isM and UDim2.new(0, 420, 0, 40) or UDim2.new(0, 420, 0, 300)
-        }):Play()
+        
+        if not Side then Side = Main:FindFirstChild("Side") end
+        if not Cont then Cont = Main:FindFirstChild("Cont") end
+        if not originalSideSize then originalSideSize = Side and Side.Size or UDim2.new(0, 110, 1, -50) end
+        if not originalContSize then originalContSize = Cont and Cont.Size or UDim2.new(1, -125, 1, -50) end
+        
+        if isM then
+            local headerHeight = Header.Size.Y.Offset
+            local newSize = UDim2.new(originalMainSize.X.Scale, originalMainSize.X.Offset, 0, headerHeight + 10)
+            
+            if Side then
+                TweenService:Create(Side, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, 0, 1, -50),
+                    BackgroundTransparency = 1
+                }):Play()
+            end
+            if Cont then
+                TweenService:Create(Cont, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = UDim2.new(0, 0, 1, -50),
+                    BackgroundTransparency = 1
+                }):Play()
+            end
+            
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = newSize
+            }):Play()
+            
+            task.wait(0.15)
+            if Side then Side.Visible = false end
+            if Cont then Cont.Visible = false end
+            
+            for _, child in pairs(Btns:GetChildren()) do
+                if child:IsA("TextButton") and child.Text == "—" then
+                    child.Text = "□"
+                    break
+                end
+            end
+        else
+            if Side then
+                Side.Visible = true
+                TweenService:Create(Side, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = originalSideSize,
+                    BackgroundTransparency = 0
+                }):Play()
+            end
+            if Cont then
+                Cont.Visible = true
+                TweenService:Create(Cont, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Size = originalContSize,
+                    BackgroundTransparency = 0
+                }):Play()
+            end
+            
+            TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = originalMainSize
+            }):Play()
+            
+            for _, child in pairs(Btns:GetChildren()) do
+                if child:IsA("TextButton") and child.Text == "□" then
+                    child.Text = "—"
+                    break
+                end
+            end
+        end
     end)
+    
     TopB("X", Color3.fromRGB(255, 100, 100), function()
         PlaySound("Click")
         if NoirUI.ActiveConfirmFrame then return end
@@ -1073,6 +1470,9 @@ function NoirUI:CreateWindow(settings)
         AddBlurOverlay(Conf, settings.ConfirmBlur)
         if settings.UseGlow then
             local confirmGlow = CreateUIGlow(Conf, ACCENT, 0.3, ScreenGui)
+        end
+        if settings.UseNeon then
+            CreateNeonPulse(Conf, ACCENT, 0.3)
         end
         CreateScaleInEffect(Conf)
         local t = Instance.new("TextLabel", Conf)
@@ -1100,6 +1500,9 @@ function NoirUI:CreateWindow(settings)
         cbtn.AutoButtonColor = false
         cbtn.Font = "GothamBold"
         CreateHoverEffect(cbtn)
+        if settings.UseRipple then
+            CreateRippleEffect(cbtn, ACCENT, 0.3)
+        end
         local fbtn = Instance.new("TextButton", Conf)
         fbtn.Size = UDim2.new(0.4, 0, 0, 32)
         fbtn.Position = UDim2.new(0.53, 0, 0.6, 0)
@@ -1116,6 +1519,9 @@ function NoirUI:CreateWindow(settings)
         fbtn.AutoButtonColor = false
         fbtn.Font = "GothamBold"
         CreateHoverEffect(fbtn)
+        if settings.UseRipple then
+            CreateRippleEffect(fbtn, ACCENT, 0.3)
+        end
         local function destroyConfirm()
             NoirUI.ActiveConfirmFrame = nil
             TweenService:Create(Conf, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
@@ -1137,7 +1543,7 @@ function NoirUI:CreateWindow(settings)
         end)
     end)
     
-    local Side = Instance.new("Frame", Main)
+    Side = Instance.new("Frame", Main)
     Side.Size = UDim2.new(0, 110, 1, -50)
     Side.Position = UDim2.new(0, 5, 0, 40)
     Side.BackgroundTransparency = 1
@@ -1153,6 +1559,8 @@ function NoirUI:CreateWindow(settings)
     SideStroke.Thickness = 1
     SideStroke.Transparency = 0.7
     AddGlowStroke(Side, ACCENT, 1, 1, 0.85)
+    originalSideSize = Side.Size
+    
     local TScroll = Instance.new("ScrollingFrame", Side)
     TScroll.Size = UDim2.new(1, 0, 1, -55)
     TScroll.Position = UDim2.new(0, 0, 0, 0)
@@ -1181,8 +1589,11 @@ function NoirUI:CreateWindow(settings)
     pcall(function() AI.Image = Players:GetUserThumbnailAsync(Players.LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100) end)
     Instance.new("UICorner", AI).CornerRadius = UDim.new(1,0)
     Instance.new("UIStroke", AI).Color = ACCENT
+    if settings.UseNeon then
+        CreateNeonPulse(AI, ACCENT, 0.5)
+    end
     
-    local Cont = Instance.new("Frame", Main)
+    Cont = Instance.new("Frame", Main)
     Cont.Size = UDim2.new(1, -125, 1, -50)
     Cont.Position = UDim2.new(0, 120, 0, 40)
     Cont.BackgroundTransparency = 1
@@ -1194,33 +1605,44 @@ function NoirUI:CreateWindow(settings)
     ContStroke.Thickness = 1
     ContStroke.Transparency = 0.7
     AddGlowStroke(Cont, ACCENT, 1, 1, 0.7)
+    originalContSize = Cont.Size
     
-    -- FLOAT BUTTON CLICK
     TBtn.MouseButton1Click:Connect(function()
         PlaySound("Click")
         CreateClickScaleEffect(TBtn)
+        if settings.UsePop then
+            PopEffect(TBtn, 1.2)
+        end
+        if settings.UseRipple then
+            CreateRippleEffect(TBtn, ACCENT, 0.3)
+        end
+        
         if not KeySolved and KUI and KUI.Parent then
             KUI.Visible = not KUI.Visible
         else
             if Main.Visible then
                 PlaySound("Close")
-                BackgroundMusic.UIHidden = true
-                if BackgroundMusic.CurrentSound and BackgroundMusic.IsPlaying then
-                    BackgroundMusic.CurrentSound.Volume = 0
+                if settings.UseSlide then
+                    local vp = Workspace.CurrentCamera.ViewportSize
+                    TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(0, -Main.AbsoluteSize.X - 50, 0, Main.Position.Y.Offset)
+                    }):Play()
+                    task.wait(0.3)
+                    Main.Visible = false
+                    Main.Position = mainDefaultPos
+                    Main.Size = UDim2.new(0, 420, 0, 300)
+                else
+                    TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, 0, 0, 0)
+                    }):Play()
+                    task.wait(0.3)
+                    Main.Visible = false
+                    Main.Size = UDim2.new(0, 420, 0, 300)
                 end
-                TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, 0, 0, 0)
-                }):Play()
-                task.wait(0.3)
-                Main.Visible = false
-                Main.Size = UDim2.new(0, 420, 0, 300)
             else
                 PlaySound("Open")
-                BackgroundMusic.UIHidden = false
-                if BackgroundMusic.CurrentSound and BackgroundMusic.IsPlaying then
-                    BackgroundMusic.CurrentSound.Volume = BackgroundMusic.Volume
-                elseif BackgroundMusic.CurrentSound and not BackgroundMusic.IsPlaying and BackgroundMusic.Playlist[1] then
-                    NoirUI:StartMusic()
+                if settings.UsePop then
+                    Main.Size = UDim2.new(0, 0, 0, 0)
                 end
                 Main.Visible = true
                 Main.Size = UDim2.new(0, 0, 0, 0)
@@ -1228,6 +1650,12 @@ function NoirUI:CreateWindow(settings)
                 TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, 420, 0, 300)
                 }):Play()
+                if settings.UseBounce then
+                    BounceEffect(Main, 20, 0.5)
+                end
+                if settings.UseConfetti then
+                    CreateConfettiBurst(Main, 20)
+                end
             end
         end
     end)
@@ -1251,8 +1679,17 @@ function NoirUI:CreateWindow(settings)
         if settings.UseGlow then
             local notifGlow = CreateUIGlow(n, ACCENT, 0.2, ScreenGui)
         end
+        if settings.UseNeon then
+            CreateNeonPulse(n, ACCENT, 0.3)
+        end
         SetupBackground(n, settings.NotificationBackground, settings.NotificationBackgroundColor, 0.25)
         CreateSpringEffect(n)
+        if settings.UseSlide then
+            SlideIn(n, "right", 0.4)
+        end
+        if settings.UseFloating then
+            CreateFloatingAnimation(n, 3, 0.5)
+        end
         if iconName then
             local iconImg = ResolveIcon(iconName)
             if iconImg then
@@ -1286,6 +1723,12 @@ function NoirUI:CreateWindow(settings)
                 Color3.fromRGB(200, 200, 200)
             }, 1.5)
         end
+        if settings.UseTyping then
+            CreateTypingEffect(tl, title, 0.03)
+        end
+        if settings.UseGlitch then
+            CreateGlitchEffect(tl, 4)
+        end
         local ml = Instance.new("TextLabel", n)
         ml.Size = UDim2.new(1, iconName and -45 or -25, 0, 35)
         ml.Position = UDim2.new(0, iconName and 40 or 15, 0, 25)
@@ -1303,6 +1746,9 @@ function NoirUI:CreateWindow(settings)
         end
         table.insert(NoirUI.Notifications, 1, n)
         TweenService:Create(n, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(1, -280, 0.8, 0)}):Play()
+        if settings.UseConfetti then
+            CreateConfettiBurst(n, 10)
+        end
         task.delay(4, function()
             TweenService:Create(n, TweenInfo.new(0.5), {Position = UDim2.new(1, 20, n.Position.Y.Scale, n.Position.Y.Offset), BackgroundTransparency = 1}):Play()
             task.wait(0.5)
@@ -1319,9 +1765,411 @@ function NoirUI:CreateWindow(settings)
     local Window = {}
     local allTabButtons = {}
     
-    -- ============================================
-    -- TAB GROUP (NHÓM TAB) - GIỐNG SECTION
-    -- ============================================
+    local function CreateIconButton(parent, iconName, pos, size, color, iconSize, iconColor, callback)
+        size = size or 36
+        iconSize = iconSize or 16
+        color = color or settings.ElementBackgroundColor or Color3.fromRGB(30, 30, 40)
+        iconColor = iconColor or Color3.fromRGB(255, 255, 255)
+        
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, size, 0, size)
+        btn.Position = pos or UDim2.new(0, 0, 0, 0)
+        btn.BackgroundColor3 = color
+        btn.Text = ""
+        btn.BackgroundTransparency = 0
+        btn.AutoButtonColor = false
+        btn.Parent = parent
+        btn.ZIndex = 2
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 10)
+        corner.Parent = btn
+        
+        AddGlowStroke(btn, ACCENT, 1, 2, 0.85)
+        if settings.UseNeon then
+            CreateNeonPulse(btn, ACCENT, 0.3)
+        end
+        if settings.UseRipple then
+            CreateRippleEffect(btn, ACCENT, 0.3)
+        end
+        
+        local iconImg
+        local resolvedIcon = ResolveIcon(iconName)
+        if resolvedIcon then
+            iconImg = Instance.new("ImageLabel")
+            iconImg.Size = UDim2.new(0, iconSize, 0, iconSize)
+            iconImg.Position = UDim2.new(0.5, -iconSize/2, 0.5, -iconSize/2)
+            iconImg.BackgroundTransparency = 1
+            iconImg.Image = resolvedIcon
+            iconImg.ImageColor3 = iconColor
+            iconImg.ScaleType = Enum.ScaleType.Crop
+            iconImg.Parent = btn
+            iconImg.ZIndex = 3
+        else
+            iconImg = Instance.new("TextLabel")
+            iconImg.Size = UDim2.new(1, 0, 1, 0)
+            iconImg.BackgroundTransparency = 1
+            iconImg.Text = iconName or "?"
+            iconImg.TextColor3 = iconColor
+            iconImg.TextTransparency = 0
+            iconImg.TextSize = iconSize + 8
+            iconImg.Font = Enum.Font.GothamMedium
+            iconImg.Parent = btn
+            iconImg.ZIndex = 3
+        end
+        
+        local origColor = color
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = Color3.fromRGB(
+                    math.min(origColor.R * 255 + 30, 255),
+                    math.min(origColor.G * 255 + 30, 255),
+                    math.min(origColor.B * 255 + 30, 255)
+                ),
+                Size = UDim2.new(0, size + 2, 0, size + 2)
+            }):Play()
+        end)
+        
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundColor3 = origColor,
+                Size = UDim2.new(0, size, 0, size)
+            }):Play()
+        end)
+        
+        btn.MouseButton1Click:Connect(function()
+            local origSize = btn.Size
+            TweenService:Create(btn, TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, size - 2, 0, size - 2)
+            }):Play()
+            task.wait(0.06)
+            TweenService:Create(btn, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = origSize
+            }):Play()
+            PlaySound("Element")
+            if settings.UsePop then
+                PopEffect(btn, 1.1)
+            end
+            if settings.UseConfetti then
+                CreateConfettiBurst(btn, 10)
+            end
+            if callback then callback() end
+        end)
+        
+        return btn, iconImg
+    end
+    
+    local function CreateGrid(parent, columns, cellSize, cellPadding, position, size)
+        columns = columns or 4
+        cellSize = cellSize or UDim2.new(0, 60, 0, 60)
+        cellPadding = cellPadding or UDim2.new(0, 5, 0, 5)
+        position = position or UDim2.new(0, 0, 0, 0)
+        
+        local gridFrame = Instance.new("Frame")
+        gridFrame.Size = size or UDim2.new(1, 0, 0, 0)
+        gridFrame.Position = position
+        gridFrame.BackgroundTransparency = 1
+        gridFrame.Parent = parent
+        gridFrame.AutomaticSize = Enum.AutomaticSize.Y
+        gridFrame.ClipsDescendants = true
+        
+        local gridLayout = Instance.new("UIGridLayout")
+        gridLayout.CellSize = cellSize
+        gridLayout.CellPadding = cellPadding
+        gridLayout.FillDirection = Enum.FillDirection.Horizontal
+        gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        gridLayout.Parent = gridFrame
+        
+        return gridFrame, gridLayout
+    end
+    
+    local function CreateHorizontalGrid(parent, columns, cellSize, cellPadding, position, size)
+        return CreateGrid(parent, columns, cellSize, cellPadding, position, size)
+    end
+    
+    local function CreateVerticalGrid(parent, columns, cellSize, cellPadding, position, size)
+        columns = columns or 2
+        cellSize = cellSize or UDim2.new(0, 60, 0, 60)
+        cellPadding = cellPadding or UDim2.new(0, 10, 0, 10)
+        position = position or UDim2.new(0, 0, 0, 0)
+        
+        local gridFrame = Instance.new("Frame")
+        gridFrame.Size = size or UDim2.new(1, 0, 0, 0)
+        gridFrame.Position = position
+        gridFrame.BackgroundTransparency = 1
+        gridFrame.Parent = parent
+        gridFrame.AutomaticSize = Enum.AutomaticSize.Y
+        gridFrame.ClipsDescendants = true
+        
+        local gridLayout = Instance.new("UIGridLayout")
+        gridLayout.CellSize = cellSize
+        gridLayout.CellPadding = cellPadding
+        gridLayout.FillDirection = Enum.FillDirection.Vertical
+        gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        gridLayout.Parent = gridFrame
+        
+        return gridFrame, gridLayout
+    end
+    
+    local function CreateBadge(parent, text, color)
+        local badge = Instance.new("Frame", parent)
+        badge.Size = UDim2.new(0, text and (#text * 10 + 20) or 20, 0, 20)
+        badge.BackgroundColor3 = color or ACCENT
+        Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 10)
+        badge.LayoutOrder = #parent:GetChildren() + 1
+        badge.BackgroundTransparency = 0.8
+        if settings.UseNeon then
+            CreateNeonPulse(badge, color or ACCENT, 0.5)
+        end
+        
+        local label = Instance.new("TextLabel", badge)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text or ""
+        label.TextColor3 = Color3.new(1,1,1)
+        label.TextSize = 11
+        label.Font = "GothamBold"
+        label.TextXAlignment = "Center"
+        
+        return badge
+    end
+    
+    local function CreateSegmentedControl(parent, options, default, callback)
+        local container = Instance.new("Frame", parent)
+        container.Size = UDim2.new(0.95, 0, 0, 32)
+        container.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+        container.BackgroundTransparency = 0.5
+        Instance.new("UICorner", container).CornerRadius = UDim.new(0, 8)
+        container.LayoutOrder = #parent:GetChildren() + 1
+        container.ClipsDescendants = true
+        
+        local selected = default or options[1]
+        local buttons = {}
+        
+        local layout = Instance.new("UIListLayout", container)
+        layout.FillDirection = "Horizontal"
+        layout.HorizontalAlignment = "Center"
+        layout.Padding = UDim.new(0, 2)
+        
+        for i, opt in ipairs(options) do
+            local btn = Instance.new("TextButton", container)
+            btn.Size = UDim2.new(0, 70, 1, -4)
+            btn.Position = UDim2.new(0, 2, 0, 2)
+            btn.Text = opt
+            btn.TextColor3 = Color3.new(1,1,1)
+            btn.TextTransparency = 0
+            btn.TextSize = 11
+            btn.Font = "GothamMedium"
+            btn.BackgroundColor3 = (opt == default) and ACCENT or Color3.fromRGB(35, 35, 45)
+            btn.BackgroundTransparency = 0
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+            btn.AutoButtonColor = false
+            btn.ZIndex = 2
+            if settings.UseRipple then
+                CreateRippleEffect(btn, ACCENT, 0.3)
+            end
+            if settings.UseNeon then
+                CreateNeonPulse(btn, ACCENT, 0.3)
+            end
+            table.insert(buttons, btn)
+            
+            btn.MouseButton1Click:Connect(function()
+                selected = opt
+                for _, b in ipairs(buttons) do
+                    TweenService:Create(b, TweenInfo.new(0.2), {
+                        BackgroundColor3 = (b == btn) and ACCENT or Color3.fromRGB(35, 35, 45)
+                    }):Play()
+                end
+                if settings.UsePop then
+                    PopEffect(btn, 1.1)
+                end
+                if callback then callback(opt) end
+            end)
+        end
+        
+        return container, buttons
+    end
+    
+    local function CreateProgressBar(parent, value, max, color)
+        local container = Instance.new("Frame", parent)
+        container.Size = UDim2.new(0.95, 0, 0, 22)
+        container.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        container.BackgroundTransparency = 0.5
+        Instance.new("UICorner", container).CornerRadius = UDim.new(0, 4)
+        container.LayoutOrder = #parent:GetChildren() + 1
+        container.ClipsDescendants = true
+        
+        local fill = Instance.new("Frame", container)
+        fill.Size = UDim2.new(value/max, 0, 1, 0)
+        fill.BackgroundColor3 = color or ACCENT
+        Instance.new("UICorner", fill).CornerRadius = UDim.new(0, 4)
+        fill.BackgroundTransparency = 0
+        if settings.UseNeon then
+            CreateNeonPulse(fill, color or ACCENT, 0.3)
+        end
+        
+        local label = Instance.new("TextLabel", container)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = math.floor(value/max * 100) .. "%"
+        label.TextColor3 = Color3.new(1,1,1)
+        label.TextSize = 10
+        label.Font = "GothamBold"
+        label.TextXAlignment = "Center"
+        label.ZIndex = 2
+        
+        local function update(newValue, newMax)
+            local v = newValue or value
+            local m = newMax or max
+            local percent = math.clamp(v/m, 0, 1)
+            TweenService:Create(fill, TweenInfo.new(0.3), {
+                Size = UDim2.new(percent, 0, 1, 0)
+            }):Play()
+            label.Text = math.floor(percent * 100) .. "%"
+        end
+        
+        return container, update
+    end
+    
+    local function CreateRadioGroup(parent, options, default, callback)
+        local container = Instance.new("Frame", parent)
+        container.Size = UDim2.new(0.95, 0, 0, #options * 30 + 10)
+        container.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+        container.BackgroundTransparency = 0.5
+        Instance.new("UICorner", container).CornerRadius = UDim.new(0, 8)
+        container.LayoutOrder = #parent:GetChildren() + 1
+        container.ClipsDescendants = true
+        
+        local selected = default or options[1]
+        local btns = {}
+        
+        local layout = Instance.new("UIListLayout", container)
+        layout.Padding = UDim.new(0, 2)
+        layout.SortOrder = "LayoutOrder"
+        
+        for i, opt in ipairs(options) do
+            local btn = Instance.new("TextButton", container)
+            btn.Size = UDim2.new(1, -20, 0, 28)
+            btn.Position = UDim2.new(0, 10, 0, 0)
+            btn.BackgroundTransparency = 1
+            btn.Text = "  " .. opt
+            btn.TextColor3 = (opt == default) and ACCENT or Color3.fromRGB(200, 200, 200)
+            btn.TextSize = 12
+            btn.Font = "GothamMedium"
+            btn.TextXAlignment = "Left"
+            btn.AutoButtonColor = false
+            btn.LayoutOrder = i
+            if settings.UseRipple then
+                CreateRippleEffect(btn, ACCENT, 0.3)
+            end
+            
+            local dot = Instance.new("Frame", btn)
+            dot.Size = UDim2.new(0, 16, 0, 16)
+            dot.Position = UDim2.new(1, -26, 0.5, -8)
+            dot.BackgroundColor3 = (opt == default) and ACCENT or Color3.fromRGB(50, 50, 60)
+            Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+            dot.BackgroundTransparency = 0
+            
+            local inner = Instance.new("Frame", dot)
+            inner.Size = UDim2.new(0, 8, 0, 8)
+            inner.Position = UDim2.new(0.25, 0, 0.25, 0)
+            inner.BackgroundColor3 = Color3.new(1,1,1)
+            Instance.new("UICorner", inner).CornerRadius = UDim.new(1, 0)
+            inner.Visible = (opt == default)
+            
+            btn.MouseButton1Click:Connect(function()
+                selected = opt
+                for _, b in ipairs(btns) do
+                    b.TextColor3 = (b == btn) and ACCENT or Color3.fromRGB(200, 200, 200)
+                    local d = b:FindFirstChild("Frame")
+                    if d then
+                        local inn = d:FindFirstChild("Frame")
+                        if inn then inn.Visible = (b == btn) end
+                        d.BackgroundColor3 = (b == btn) and ACCENT or Color3.fromRGB(50, 50, 60)
+                    end
+                end
+                if settings.UsePop then
+                    PopEffect(btn, 1.1)
+                end
+                if callback then callback(opt) end
+            end)
+            
+            table.insert(btns, btn)
+        end
+        
+        return container, btns
+    end
+    
+    local function CreateCard(parent, title, content)
+        local card = Instance.new("Frame", parent)
+        card.Size = UDim2.new(0.95, 0, 0, 60)
+        card.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+        card.BackgroundTransparency = 0.5
+        Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+        card.LayoutOrder = #parent:GetChildren() + 1
+        
+        local titleLabel = Instance.new("TextLabel", card)
+        titleLabel.Size = UDim2.new(1, -20, 0, 22)
+        titleLabel.Position = UDim2.new(0, 12, 0, 6)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Text = title or ""
+        titleLabel.TextColor3 = Color3.new(1,1,1)
+        titleLabel.TextSize = 12
+        titleLabel.Font = "GothamBold"
+        titleLabel.TextXAlignment = "Left"
+        if settings.UseTyping then
+            CreateTypingEffect(titleLabel, title or "", 0.03)
+        end
+        
+        local contentLabel = Instance.new("TextLabel", card)
+        contentLabel.Size = UDim2.new(1, -20, 0, 25)
+        contentLabel.Position = UDim2.new(0, 12, 0, 28)
+        contentLabel.BackgroundTransparency = 1
+        contentLabel.Text = content or ""
+        contentLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+        contentLabel.TextSize = 11
+        contentLabel.Font = "Gotham"
+        contentLabel.TextXAlignment = "Left"
+        contentLabel.TextWrapped = true
+        
+        return card
+    end
+    
+    local function CreateLoadingSpinner(parent, size)
+        size = size or 32
+        local spinner = Instance.new("Frame", parent)
+        spinner.Size = UDim2.new(0, size, 0, size)
+        spinner.BackgroundTransparency = 1
+        spinner.LayoutOrder = #parent:GetChildren() + 1
+        spinner.Visible = true
+        
+        local image = Instance.new("ImageLabel", spinner)
+        image.Size = UDim2.new(1, 0, 1, 0)
+        image.BackgroundTransparency = 1
+        image.Image = "rbxassetid://6031094700"
+        image.ImageColor3 = ACCENT
+        image.ScaleType = "Fit"
+        if settings.UseNeon then
+            CreateNeonPulse(image, ACCENT, 0.5)
+        end
+        
+        local rotation = 0
+        local conn = RunService.RenderStepped:Connect(function()
+            if not spinner.Parent then conn:Disconnect() return end
+            rotation = (rotation + 3) % 360
+            image.Rotation = rotation
+        end)
+        table.insert(NoirUI.Connections, conn)
+        
+        local function show() spinner.Visible = true end
+        local function hide() spinner.Visible = false end
+        local function destroy() spinner:Destroy(); conn:Disconnect() end
+        
+        return {Show = show, Hide = hide, Destroy = destroy}
+    end
+    
     function Window:CreateTabGroup(title, defaultOpen)
         local group = {}
         local isOpen = defaultOpen ~= false
@@ -1332,13 +2180,18 @@ function NoirUI:CreateWindow(settings)
         groupFrame.ClipsDescendants = true
         groupFrame.LayoutOrder = #TScroll:GetChildren() + 1
         
-        -- Header (click để collapse/expand)
         local header = Instance.new("TextButton", groupFrame)
         header.Size = UDim2.new(1, 0, 0, 28)
         header.BackgroundTransparency = 1
         header.Text = ""
         header.AutoButtonColor = false
         CreateHoverEffect(header)
+        if settings.UseRipple then
+            CreateRippleEffect(header, ACCENT, 0.3)
+        end
+        if settings.UseNeon then
+            CreateNeonPulse(header, ACCENT, 0.3)
+        end
         
         local titleLabel = Instance.new("TextLabel", header)
         titleLabel.Size = UDim2.new(1, -30, 1, 0)
@@ -1357,6 +2210,9 @@ function NoirUI:CreateWindow(settings)
                 Color3.fromRGB(200, 200, 200)
             }, 1.2)
         end
+        if settings.UseGlitch then
+            CreateGlitchEffect(titleLabel, 5)
+        end
         
         local arrow = Instance.new("TextLabel", header)
         arrow.Size = UDim2.new(0, 20, 1, 0)
@@ -1371,7 +2227,6 @@ function NoirUI:CreateWindow(settings)
         arrow.TextYAlignment = "Center"
         arrow.Name = "Arrow"
         
-        -- Container chứa các tab con
         local content = Instance.new("Frame", groupFrame)
         content.Size = UDim2.new(1, 0, 0, 0)
         content.Position = UDim2.new(0, 0, 0, 28)
@@ -1381,22 +2236,17 @@ function NoirUI:CreateWindow(settings)
         contentLayout.Padding = UDim.new(0, 2)
         contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         
-        -- Hàm thêm tab vào group
         function group:CreateTab(name, icon)
-            -- Tạo tab bằng hàm CreateTab gốc
             local tab = Window:CreateTab(name, icon)
-            -- Lấy button của tab và di chuyển vào group
             local btn = tab._button
             if btn then
                 btn.Parent = content
-                btn.Position = UDim2.new(0, 15, 0, 0) -- Thụt lề
+                btn.Position = UDim2.new(0, 15, 0, 0)
                 btn.Size = UDim2.new(1, -5, 0, 32)
-                -- Cập nhật lại background theo setting
                 if settings.TabBackgroundColor then
                     btn.BackgroundColor3 = settings.TabBackgroundColor
                 end
             end
-            -- Cập nhật chiều cao group
             task.wait()
             local contentHeight = contentLayout.AbsoluteContentSize.Y + 10
             if isOpen then
@@ -1407,10 +2257,12 @@ function NoirUI:CreateWindow(settings)
             return tab
         end
         
-        -- Collapse/Expand
         header.MouseButton1Click:Connect(function()
             PlaySound("Element")
             CreateClickScaleEffect(header)
+            if settings.UsePop then
+                PopEffect(header, 1.1)
+            end
             isOpen = not isOpen
             arrow.Text = isOpen and "▼" or "▶"
             local targetHeight = isOpen and (contentLayout.AbsoluteContentSize.Y + 10) or 0
@@ -1424,7 +2276,6 @@ function NoirUI:CreateWindow(settings)
             updateSidebarCanvas()
         end)
         
-        -- Cập nhật chiều cao ban đầu
         task.wait()
         local contentHeight = contentLayout.AbsoluteContentSize.Y + 10
         content.Size = UDim2.new(1, 0, 0, isOpen and contentHeight or 0)
@@ -1434,9 +2285,6 @@ function NoirUI:CreateWindow(settings)
         return group
     end
     
-    -- ============================================
-    -- HÀM TẠO TAB ROOT (gốc - không nằm trong group)
-    -- ============================================
     function Window:CreateTab(name, icon)
         local B = Instance.new("TextButton", TScroll)
         B.Size = UDim2.new(1, -5, 0, 32)
@@ -1450,6 +2298,12 @@ function NoirUI:CreateWindow(settings)
         B.AutoButtonColor = false
         Instance.new("UICorner", B).CornerRadius = UDim.new(0, 6)
         CreateHoverEffect(B)
+        if settings.UseRipple then
+            CreateRippleEffect(B, ACCENT, 0.3)
+        end
+        if settings.UseNeon then
+            CreateNeonPulse(B, ACCENT, 0.3)
+        end
         
         local tabStroke = Instance.new("UIStroke", B)
         tabStroke.Color = ACCENT
@@ -1485,6 +2339,12 @@ function NoirUI:CreateWindow(settings)
                 Color3.fromRGB(200, 200, 200)
             }, 1)
         end
+        if settings.UseGlitch then
+            CreateGlitchEffect(BT, 4)
+        end
+        if settings.UseTyping then
+            CreateTypingEffect(BT, name, 0.04)
+        end
         
         if icon then
             local IC = Instance.new("ImageLabel", B)
@@ -1518,7 +2378,6 @@ function NoirUI:CreateWindow(settings)
         TabContainer.BorderSizePixel = 0
         TabContainer.ClipsDescendants = true
         
-        -- Search
         local SearchFrame = Instance.new("Frame", TabContainer)
         SearchFrame.Size = UDim2.new(1, -20, 0, 35)
         SearchFrame.Position = UDim2.new(0, 10, 0, 0)
@@ -1535,6 +2394,9 @@ function NoirUI:CreateWindow(settings)
         searchStroke.Transparency = 0.7
         searchStroke.ZIndex = 2
         AddGlowStroke(SearchFrame, ACCENT, 1, 1, 0.85)
+        if settings.UseNeon then
+            CreateNeonPulse(SearchFrame, ACCENT, 0.3)
+        end
         
         local SearchIcon = Instance.new("TextLabel", SearchFrame)
         SearchIcon.Size = UDim2.new(0, 30, 1, 0)
@@ -1608,12 +2470,21 @@ function NoirUI:CreateWindow(settings)
             if tabGlowStroke then tabGlowStroke.Transparency = 0.7 end
             local tabImg = B:FindFirstChild("ImageLabel")
             if tabImg then tabImg.ImageColor3 = ACCENT end
+            if settings.UseSlide then
+                SlideIn(TabContainer, "left", 0.3)
+            end
+            if settings.UseConfetti then
+                CreateConfettiBurst(TabContainer, 10)
+            end
             updateCanvas()
         end
         
         B.MouseButton1Click:Connect(function()
             PlaySound("Tab")
             CreateClickScaleEffect(B)
+            if settings.UsePop then
+                PopEffect(B, 1.1)
+            end
             selectThisTab()
         end)
         
@@ -1623,7 +2494,6 @@ function NoirUI:CreateWindow(settings)
             selectThisTab()
         end
         
-        -- Tab Object
         local Tab = { Count = 0, Elements = {}, Connections = {}, _currentSectionContent = nil, _sectionLayout = nil }
         local function GetO() Tab.Count = Tab.Count + 1; return Tab.Count end
         
@@ -1642,9 +2512,6 @@ function NoirUI:CreateWindow(settings)
             if prop == "Text" then filterElements(SearchBox.Text) end
         end)
         
-        -- ============================================
-        -- ELEMENTS
-        -- ============================================
         function Tab:CreateLabel(text, updateFunction)
             local parent = Tab._currentSectionContent or ContentFrame
             local l = Instance.new("TextLabel", parent)
@@ -1664,6 +2531,12 @@ function NoirUI:CreateWindow(settings)
             l.Name = "Label"
             table.insert(Tab.Elements, l)
             CreateSpringEffect(l, 0.05 * Tab.Count)
+            if settings.UseTyping and type(text) == "string" then
+                CreateTypingEffect(l, text, 0.03)
+            end
+            if settings.UseGlitch then
+                CreateGlitchEffect(l, 5)
+            end
             if type(text) == "function" then
                 local connection = RunService.RenderStepped:Connect(function()
                     if l and l.Parent then
@@ -1695,6 +2568,9 @@ function NoirUI:CreateWindow(settings)
             headerBtn.Text = ""
             headerBtn.AutoButtonColor = false
             CreateHoverEffect(headerBtn)
+            if settings.UseRipple then
+                CreateRippleEffect(headerBtn, ACCENT, 0.3)
+            end
             
             local lbl = Instance.new("TextLabel", headerBtn)
             lbl.Size = UDim2.new(1, -30, 1, 0)
@@ -1716,6 +2592,9 @@ function NoirUI:CreateWindow(settings)
                     Color3.fromRGB(255, 255, 255),
                     Color3.fromRGB(200, 200, 200)
                 }, 1.2)
+            end
+            if settings.UseGlitch then
+                CreateGlitchEffect(lbl, 5)
             end
             
             local arrow = Instance.new("TextLabel", headerBtn)
@@ -1760,6 +2639,9 @@ function NoirUI:CreateWindow(settings)
             headerBtn.MouseButton1Click:Connect(function()
                 PlaySound("Element")
                 CreateClickScaleEffect(headerBtn)
+                if settings.UsePop then
+                    PopEffect(headerBtn, 1.1)
+                end
                 isCollapsed = not isCollapsed
                 arrow.Text = isCollapsed and "▶" or "▼"
                 if isCollapsed then
@@ -1786,6 +2668,9 @@ function NoirUI:CreateWindow(settings)
                 line.BackgroundColor3 = ACCENT
                 line.BackgroundTransparency = 0.5
                 line.BorderSizePixel = 0
+                if settings.UseNeon then
+                    CreateNeonPulse(line, ACCENT, 0.3)
+                end
             end
             
             Tab._currentSectionContent = sectionContent
@@ -1823,6 +2708,9 @@ function NoirUI:CreateWindow(settings)
             title.TextSize = 13
             title.BackgroundTransparency = 1
             title.TextXAlignment = "Left"
+            if settings.UseTyping then
+                CreateTypingEffect(title, opt.Title or "", 0.03)
+            end
             
             local content = Instance.new("TextLabel", f)
             content.Size = UDim2.new(1, -20, 0, 30)
@@ -1904,6 +2792,12 @@ function NoirUI:CreateWindow(settings)
             b.AutoButtonColor = false
             table.insert(Tab.Elements, b)
             CreateSpringEffect(b, 0.05 * Tab.Count)
+            if settings.UseRipple then
+                CreateRippleEffect(b, ACCENT, 0.3)
+            end
+            if settings.UseNeon then
+                CreateNeonPulse(b, ACCENT, 0.3)
+            end
             
             if opt.Align == false then
                 b.TextXAlignment = "Left"
@@ -1931,8 +2825,19 @@ function NoirUI:CreateWindow(settings)
             b.MouseButton1Click:Connect(function()
                 PlaySound("Element")
                 CreateClickScaleEffect(b)
+                if settings.UsePop then
+                    PopEffect(b, 1.1)
+                end
+                if settings.UseConfetti then
+                    CreateConfettiBurst(b, 15)
+                end
+                if settings.UseBounce then
+                    BounceEffect(b, 5, 0.3)
+                end
                 if opt.Callback then opt.Callback() end
             end)
+            
+            return b
         end
         
         function Tab:CreateToggle(opt)
@@ -1963,6 +2868,9 @@ function NoirUI:CreateWindow(settings)
             t.AutoButtonColor = false
             table.insert(Tab.Elements, t)
             CreateSpringEffect(t, 0.05 * Tab.Count)
+            if settings.UseRipple then
+                CreateRippleEffect(t, ACCENT, 0.3)
+            end
             
             local bx = Instance.new("Frame", t)
             bx.Size = UDim2.new(0, 30, 0, 16)
@@ -1970,6 +2878,9 @@ function NoirUI:CreateWindow(settings)
             bx.BackgroundColor3 = s and ACCENT or Color3.fromRGB(40, 40, 40)
             bx.BackgroundTransparency = 0.3
             Instance.new("UICorner", bx).CornerRadius = UDim.new(1, 0)
+            if settings.UseNeon then
+                CreateNeonPulse(bx, s and ACCENT or Color3.fromRGB(40, 40, 40), 0.3)
+            end
             
             if hasSubtitle then
                 AddSubtitle(t, opt.Subtitle, 38)
@@ -1978,6 +2889,9 @@ function NoirUI:CreateWindow(settings)
             t.MouseButton1Click:Connect(function()
                 PlaySound("Element")
                 CreateClickScaleEffect(t)
+                if settings.UsePop then
+                    PopEffect(t, 1.1)
+                end
                 s = not s
                 if useAutoContrast then
                     t.TextColor3 = s and GetContrastColor(t.BackgroundColor3) or Color3.fromRGB(180, 180, 180)
@@ -2043,6 +2957,9 @@ function NoirUI:CreateWindow(settings)
             fill.Size = UDim2.new(percent, 0, 1, 0)
             fill.BackgroundColor3 = ACCENT
             Instance.new("UICorner", fill)
+            if settings.UseNeon then
+                CreateNeonPulse(fill, ACCENT, 0.3)
+            end
             
             if hasSubtitle then
                 AddSubtitle(f, opt.Subtitle, 48)
@@ -2288,6 +3205,9 @@ function NoirUI:CreateWindow(settings)
             t.TextXAlignment = "Left"
             t.AutoButtonColor = false
             CreateHoverEffect(t)
+            if settings.UseRipple then
+                CreateRippleEffect(t, ACCENT, 0.3)
+            end
             
             local Arrow = Instance.new("TextLabel", t)
             Arrow.Name = "ArrowLabel"
@@ -2489,10 +3409,19 @@ function NoirUI:CreateWindow(settings)
             r.TextSize = 10
             Instance.new("UICorner", r).CornerRadius = UDim.new(0, 6)
             r.AutoButtonColor = false
+            if settings.UseRipple then
+                CreateRippleEffect(r, ACCENT, 0.3)
+            end
+            if settings.UseNeon then
+                CreateNeonPulse(r, ACCENT, 0.3)
+            end
             
             r.MouseButton1Click:Connect(function()
                 PlaySound("Element")
                 CreateClickScaleEffect(r)
+                if settings.UsePop then
+                    PopEffect(r, 1.1)
+                end
                 local input = i.Text
                 if input == "" then return end
                 
@@ -2546,13 +3475,45 @@ function NoirUI:CreateWindow(settings)
             end)
         end
         
-        -- Lưu button để TabGroup có thể di chuyển
+        Tab.CreateIconButton = CreateIconButton
+        Tab.CreateGrid = CreateGrid
+        Tab.CreateHorizontalGrid = CreateHorizontalGrid
+        Tab.CreateVerticalGrid = CreateVerticalGrid
+        Tab.CreateBadge = CreateBadge
+        Tab.CreateSegmentedControl = CreateSegmentedControl
+        Tab.CreateProgressBar = CreateProgressBar
+        Tab.CreateRadioGroup = CreateRadioGroup
+        Tab.CreateCard = CreateCard
+        Tab.CreateLoadingSpinner = CreateLoadingSpinner
+        
         Tab._button = B
         
         return Tab
     end
     
-    -- Cập nhật canvas lần cuối
+    Window.CreateIconButton = CreateIconButton
+    Window.CreateGrid = CreateGrid
+    Window.CreateHorizontalGrid = CreateHorizontalGrid
+    Window.CreateVerticalGrid = CreateVerticalGrid
+    Window.CreateBadge = CreateBadge
+    Window.CreateSegmentedControl = CreateSegmentedControl
+    Window.CreateProgressBar = CreateProgressBar
+    Window.CreateRadioGroup = CreateRadioGroup
+    Window.CreateCard = CreateCard
+    Window.CreateLoadingSpinner = CreateLoadingSpinner
+    
+    Window.PushHistory = function(state)
+        NoirUI:PushHistory(state)
+    end
+    
+    Window.Undo = function(callback)
+        NoirUI:Undo(callback)
+    end
+    
+    Window.Redo = function(callback)
+        NoirUI:Redo(callback)
+    end
+    
     task.wait()
     updateSidebarCanvas()
     
