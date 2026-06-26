@@ -1,13 +1,14 @@
-📘 NoirUI V3 Ultimate - Hướng Dẫn Chi Tiết & Đầy Đủ Nhất
-
-NoirUI V3 Ultimate - Thư viện giao diện người dùng hiện đại, tối giản và tùy biến cao dành cho Roblox Executor.
+📘 NoirUI V3 Ultimate - Hướng Dẫn Đầy Đủ Nhất
 
 <div align="center">
 
 https://img.shields.io/badge/NoirUI-V3_Ultimate-8A2BE2?style=for-the-badge&logo=lua&logoColor=white
+
+https://img.shields.io/github/stars/NoirNotFun/NUI?style=social
+https://img.shields.io/github/forks/NoirNotFun/NUI?style=social
 https://img.shields.io/badge/Version-3.0-blue?style=flat-square
 https://img.shields.io/badge/License-MIT-green?style=flat-square
-https://img.shields.io/badge/Roblox-Executor-red?style=flat-square
+https://img.shields.io/badge/Lua-5.1-blue?style=flat-square&logo=lua
 
 </div>
 
@@ -33,23 +34,22 @@ https://img.shields.io/badge/Roblox-Executor-red?style=flat-square
 · 🔑 Key System
 · 📱 Minimize
 · 🗑️ Destroy UI
-· 📝 Ví Dụ
+· 📝 Ví Dụ Đầy Đủ
 · 🎨 Icon List
 · 💡 Mẹo & Thủ Thuật
 · 🔧 Khắc Phục Sự Cố
+· 📝 License
 
 ---
 
 ✨ Giới Thiệu
 
-NoirUI V3 Ultimate là thư viện giao diện người dùng mạnh mẽ, cho phép bạn tạo UI đẹp mắt và chuyên nghiệp cho script Roblox của mình.
+NoirUI V3 Ultimate là thư viện giao diện người dùng hiện đại, tối giản và tùy biến cao dành cho Roblox Executor (Synapse X, Krnl, ScriptWare, Fluxus, v.v.).
 
 🌟 Tính Năng Nổi Bật
 
-<div align="center">
-
 Tính năng Mô tả
-🎨 Theme System 10+ theme có sẵn (Anime, Cyberpunk, Vaporwave)
+🎨 Theme System 11+ theme có sẵn (Anime, Cyberpunk, Vaporwave)
 🔄 Dynamic Update Cập nhật Accent, Background, Blur sau khi tạo
 🆕 8+ Components Icon Button, Grid, Badge, Segmented Control, Progress Bar, Radio Group, Card, Loading Spinner
 ✨ 10+ Effects Ripple, Particles, Neon, Glitch, Pop, Bounce, Slide, Floating, Confetti, Typing
@@ -59,8 +59,7 @@ Tính năng Mô tả
 🔑 Key System Bảo vệ UI bằng key
 📱 Minimize Thu gọn UI về 350px + Description
 🔄 Undo/Redo Lưu lịch sử thao tác
-
-</div>
+🎯 Auto Contrast Tự động tương phản chữ với nền
 
 ---
 
@@ -68,7 +67,7 @@ Tính năng Mô tả
 
 ```lua
 -- Load NoirUI từ GitHub
-local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirNotFun/NUI/refs/heads/main/eg"))()
+local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirNotFun/NUI/refs/heads/main/ui.lua"))()
 ```
 
 ---
@@ -80,13 +79,13 @@ local Window = NoirUI:CreateWindow({
     -- ========================================
     -- CORE SETTINGS
     -- ========================================
-    Name = "NOIR HUB",                    -- Tiêu đề
+    Name = "NOIR HUB",                    -- Tiêu đề cửa sổ
     Description = "Version 3.0",           -- Description (hiện khi minimize)
     Accent = Color3.fromRGB(170, 85, 255), -- Màu chủ đạo
-    AutoContrast = false,                  -- Tự động tương phản chữ
-    UseGlow = false,                       -- Bật glow viền
-    Icon = nil,                            -- Icon float button
-    LogoID = nil,                          -- Logo header
+    AutoContrast = false,                  -- Tự động tương phản chữ với nền
+    UseGlow = false,                       -- Bật hiệu ứng glow viền
+    Icon = nil,                            -- Icon cho nút float
+    LogoID = nil,                          -- Logo hiển thị trên header
     DefaultPosition = UDim2.new(0.5, -210, 0.5, -150),
     FloatDefaultPosition = UDim2.new(0, 15, 0.5, -22),
     FloatSize = 45,
@@ -94,7 +93,7 @@ local Window = NoirUI:CreateWindow({
     FloatCornerRadius = 12,
 
     -- ========================================
-    -- COLOR & BLUR
+    -- MÀU NỀN & BLUR
     -- ========================================
     MainBgColor = Color3.fromRGB(10, 10, 10),
     MainBgTransparency = 0,
@@ -103,15 +102,15 @@ local Window = NoirUI:CreateWindow({
     KeyBlur = 0,
     NotificationBlur = 0,
     ConfirmBlur = 0,
-    ElementBackgroundColor = nil,
-    SidebarBackgroundColor = nil,
+    ElementBackgroundColor = nil,              -- Màu nền chung cho element
+    SidebarBackgroundColor = nil,              -- Màu nền sidebar
     SidebarTransparency = 0.8,
-    TabBackgroundColor = nil,
+    TabBackgroundColor = nil,                  -- Màu nền tab
     ConfirmBackgroundColor = Color3.fromRGB(15, 15, 15),
     NotificationBackgroundColor = Color3.fromRGB(15, 15, 15),
 
     -- ========================================
-    -- BACKGROUND IMAGES
+    -- NỀN ẢNH
     -- ========================================
     Background = nil,                        -- {Image = "...", Transparency = 0}
     LoadingBackground = nil,
@@ -120,19 +119,19 @@ local Window = NoirUI:CreateWindow({
     FloatBackground = nil,
 
     -- ========================================
-    -- EFFECTS
+    -- HIỆU ỨNG
     -- ========================================
     UseRipple = false,      -- Gợn sóng khi click
     UseParticles = false,   -- Hạt nền
     ParticleCount = 30,
-    UseNeon = false,        -- Viền neon
-    UseGlitch = false,      -- Lỗi GLITCH
-    UsePop = false,         -- Bật lên
-    UseBounce = false,      -- Nảy
-    UseSlide = false,       -- Trượt
-    UseFloating = false,    -- Lơ lửng
-    UseConfetti = false,    -- Pháo hoa
-    UseTyping = false,      -- Đánh chữ
+    UseNeon = false,        -- Viền neon nhấp nháy
+    UseGlitch = false,      -- Hiệu ứng lỗi GLITCH
+    UsePop = false,         -- Hiệu ứng bật lên
+    UseBounce = false,      -- Hiệu ứng nảy
+    UseSlide = false,       -- Hiệu ứng trượt
+    UseFloating = false,    -- Hiệu ứng lơ lửng
+    UseConfetti = false,    -- Hiệu ứng pháo hoa
+    UseTyping = false,      -- Hiệu ứng đánh chữ
 
     -- ========================================
     -- KEY SYSTEM
@@ -148,7 +147,7 @@ local Window = NoirUI:CreateWindow({
     },
 
     -- ========================================
-    -- MUSIC
+    -- NHẠC NỀN
     -- ========================================
     BackgroundMusic = {
         Enabled = false,
@@ -162,7 +161,7 @@ local Window = NoirUI:CreateWindow({
     -- ========================================
     -- THEME
     -- ========================================
-    DefaultTheme = "default",                -- Theme mặc định
+    DefaultTheme = "default",                -- Theme mặc định khi khởi động
 })
 ```
 
@@ -170,22 +169,22 @@ local Window = NoirUI:CreateWindow({
 
 🎨 Theme System
 
-Theme Có Sẵn
+🎭 Danh Sách Theme Có Sẵn
 
-Theme Mô tả Accent
-default Mặc định Tím
-demonSlayer ⚔️ Demon Slayer Cam đỏ
-jujutsuKaisen 🔮 Jujutsu Kaisen Xanh dương
-naruto 🍥 Naruto Cam
-attackOnTitan ⚔️ Attack on Titan Nâu
-onePiece 🏴‍☠️ One Piece Vàng
-myHeroAcademia 🦸 MHA Hồng
-dragonBall 🐉 Dragon Ball Cam đậm
-swordArtOnline ⚔️ SAO Xanh nhạt
-cyberpunk 🔮 Cyberpunk Xanh neon
-vaporwave 🌴 Vaporwave Hồng
+Theme Mô tả Màu Accent
+default Mặc định Tím (170, 85, 255)
+demonSlayer ⚔️ Demon Slayer Cam đỏ (255, 100, 50)
+jujutsuKaisen 🔮 Jujutsu Kaisen Xanh dương (50, 200, 255)
+naruto 🍥 Naruto Cam (255, 150, 50)
+attackOnTitan ⚔️ Attack on Titan Nâu (150, 100, 50)
+onePiece 🏴‍☠️ One Piece Vàng (255, 200, 0)
+myHeroAcademia 🦸 MHA Hồng (255, 100, 200)
+dragonBall 🐉 Dragon Ball Cam đậm (255, 150, 0)
+swordArtOnline ⚔️ SAO Xanh nhạt (100, 200, 255)
+cyberpunk 🔮 Cyberpunk Xanh neon (0, 255, 200)
+vaporwave 🌴 Vaporwave Hồng (255, 100, 255)
 
-Áp Dụng Theme
+🔧 Sử Dụng Theme
 
 ```lua
 -- Áp dụng theme
@@ -193,15 +192,16 @@ Window:ApplyTheme("demonSlayer")
 
 -- Lấy theme hiện tại
 local currentTheme = Window:GetCurrentTheme()
+print("Theme hiện tại:", currentTheme) -- "demonSlayer"
 
--- Dừng Vibe Sound
+-- Dừng Vibe Sound (nếu có)
 Window:StopVibeSound()
 ```
 
-Tạo Theme Tùy Chỉnh
+🎨 Tạo Theme Tùy Chỉnh
 
 ```lua
--- Thêm theme mới vào NoirUI.Themes
+-- Thêm theme mới vào hệ thống
 NoirUI.Themes.myTheme = {
     name = "🎮 My Theme",
     accent = Color3.fromRGB(255, 100, 100),
@@ -228,46 +228,59 @@ Window:ApplyTheme("myTheme")
 
 Sau khi tạo Window, bạn có thể cập nhật các thuộc tính bất kỳ lúc nào:
 
+📋 Danh Sách Hàm Cập Nhật
+
 ```lua
 -- Cập nhật màu chủ đạo
 Window:SetAccent(Color3.fromRGB(255, 100, 100))
 
--- Cập nhật nền
+-- Cập nhật màu nền chính
 Window:SetMainBackground(Color3.fromRGB(20, 20, 30), 0)
 
--- Cập nhật blur
+-- Cập nhật độ mờ (Blur)
 Window:SetBlur(0.3)
 
--- Cập nhật sidebar
+-- Cập nhật màu sidebar
 Window:SetSidebarBackground(Color3.fromRGB(20, 20, 30), 0.8)
 
--- Cập nhật tab
+-- Cập nhật màu tab
 Window:SetTabBackground(Color3.fromRGB(30, 30, 40))
 
--- Cập nhật element
+-- Cập nhật màu element
 Window:SetElementBackground(Color3.fromRGB(25, 25, 35))
 
 -- Cập nhật ảnh nền
 Window:SetBackgroundImage("rbxassetid://1234567890", 0.5)
 
--- Cập nhật float icon
+-- Cập nhật ảnh nền float button
+Window:SetFloatBackgroundImage("rbxassetid://1234567891", 0.5)
+
+-- Cập nhật icon float
 Window:SetFloatIcon("home")
 
--- Cập nhật title
+-- Cập nhật tiêu đề
 Window:SetTitle("New Title")
 
 -- Cập nhật description
 Window:SetDescription("New Description")
 
+-- Cập nhật độ trong suốt sidebar
+Window:SetSidebarTransparency(0.85)
+
 -- Lấy accent hiện tại
 local accent = Window:GetAccent()
+print("Accent:", accent)
+
+-- Lấy theme hiện tại
+local theme = Window:GetCurrentTheme()
+print("Theme:", theme)
 ```
 
 ---
 
 📑 Tạo Tab
 
-Tab Root
+Tab Root (luôn hiển thị)
 
 ```lua
 local tab = Window:CreateTab("Tên Tab", "icon")
@@ -294,137 +307,154 @@ local tab2 = group:CreateTab("Combat", "sword")
 local tab3 = group:CreateTab("Auto Click", "mouse")
 ```
 
-Tính năng:
+✨ Tính năng:
 
-· Click tiêu đề để thu gọn/mở rộng
-· Tab con được thụt lề
+· Click vào tiêu đề để thu gọn/mở rộng
+· Tab con được thụt lề để phân biệt
 · Tất cả element hoạt động bình thường
+· Có thể tạo nhiều group trong cùng window
 
 ---
 
 🧩 Elements Cơ Bản
 
-Tất cả element đều hỗ trợ Subtitle.
+Tất cả element đều hỗ trợ tham số Subtitle để thêm mô tả.
 
-1. Label
+1. Label (Nhãn)
 
 ```lua
--- Tĩnh
-tab:CreateLabel("Nội dung")
+-- Label tĩnh
+tab:CreateLabel("Nội dung văn bản")
 
--- Động (cập nhật liên tục)
+-- Label động (cập nhật liên tục)
 local count = 0
 tab:CreateLabel(function()
-    return "Giá trị: " .. count
+    return "Giá trị hiện tại: " .. count
 end)
 ```
 
-2. Section
+2. Section (Phần nhóm)
 
 ```lua
 local section = tab:CreateSection("Tên Section", true)  -- true: ẩn đường kẻ
 ```
 
-3. Paragraph
+3. Paragraph (Khối văn bản)
 
 ```lua
 tab:CreateParagraph({
     Title = "Tiêu đề",
-    Content = "Nội dung dài...\nCó thể xuống dòng."
+    Content = "Nội dung dài...\nCó thể xuống dòng bằng \\n."
 })
 ```
 
-4. Button
+4. Button (Nút bấm)
 
 ```lua
 tab:CreateButton({
     Name = "Tên nút",
-    Subtitle = "Phụ đề",
-    Align = false,  -- false: trái, true: giữa
-    Callback = function() print("Đã bấm!") end
+    Subtitle = "Phụ đề (tùy chọn)",
+    Align = false,  -- false: căn trái, true: căn giữa
+    Callback = function()
+        print("Đã bấm!")
+    end
 })
 ```
 
-5. Toggle
+5. Toggle (Công tắc)
 
 ```lua
 tab:CreateToggle({
     Name = "Bật chức năng",
-    Subtitle = "Mô tả",
+    Subtitle = "Mô tả chức năng",
     Default = true,
-    Callback = function(state) print(state) end
+    Callback = function(state)
+        print("Trạng thái:", state)
+    end
 })
 ```
 
-6. Slider
+6. Slider (Thanh trượt)
 
 ```lua
 tab:CreateSlider({
     Name = "Âm lượng",
-    Subtitle = "Điều chỉnh",
+    Subtitle = "Điều chỉnh âm lượng",
     range = {0, 100},
     increment = 5,
     Default = 50,
-    Callback = function(value) print(value) end
+    Callback = function(value)
+        print("Giá trị:", value)
+    end
 })
 ```
 
-7. Color Picker
+7. Color Picker (Chọn màu)
 
 ```lua
 tab:CreateColorPicker({
     Name = "Chọn màu",
     Subtitle = "Màu accent",
     Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(color) print(color) end
+    Callback = function(color)
+        print("Màu:", color)
+    end
 })
 ```
 
-8. Dropdown
+8. Dropdown (Thả xuống)
 
 ```lua
--- Tĩnh
+-- Danh sách tĩnh
 tab:CreateDropdown({
     Name = "Chọn",
-    Subtitle = "Danh sách",
+    Subtitle = "Danh sách tùy chọn",
     Options = {"A", "B", "C"},
     Default = "A",
-    Callback = function(option) print(option) end
+    Callback = function(option)
+        print("Đã chọn:", option)
+    end
 })
 
--- Động
+-- Danh sách động (cập nhật theo thời gian thực)
 tab:CreateDropdown({
     Name = "Chọn",
-    GetOptions = function() return {"X", "Y", "Z"} end,
+    GetOptions = function()
+        return {"X", "Y", "Z"}
+    end,
     RefreshOnOpen = true,
-    Callback = function(opt) print(opt) end
+    Callback = function(opt)
+        print("Đã chọn:", opt)
+    end
 })
 ```
 
-9. TextBox
+9. TextBox (Ô nhập liệu)
 
 ```lua
 tab:CreateTextBox({
     Name = "Nhập",
     Subtitle = "Mô tả",
     Default = "Giá trị mặc định",
-    Callback = function(text) print(text) end
+    Callback = function(text)
+        print("Đã nhập:", text)
+    end
 })
 ```
 
-10. RunBox
+10. RunBox (Thực thi lệnh)
 
 ```lua
 tab:CreateRunBox({
     Placeholder = "Nhập lệnh hoặc code...",
-    ClearOnExecute = true
+    ClearOnExecute = true  -- tự động xóa sau khi chạy
 })
 ```
 
 Hỗ trợ:
 
-· Lệnh tùy chỉnh: help (không cần dấu ".")
-· Lua code trực tiếp
+· ✅ Lệnh tùy chỉnh: help (không cần dấu ".")
+· ✅ Lua code trực tiếp: print("Hello")
 · ❌ loadstring đã bị vô hiệu hóa
 · ❌ require đã bị vô hiệu hóa
 
@@ -432,50 +462,57 @@ Hỗ trợ:
 
 🆕 Components Mới
 
-Lưu ý: Các component này CHỈ có thể sử dụng từ Tab, không sử dụng từ Window.
+⚠️ Lưu ý quan trọng: Các component này CHỈ có thể sử dụng từ Tab, không sử dụng từ Window.
 
-1. Icon Button
+1. Icon Button (Nút icon)
 
 ```lua
 local btn, icon = tab:CreateIconButton(
-    parent,          -- Frame cha
-    "home",          -- Tên icon
-    nil,             -- Vị trí (UDim2)
-    36,              -- Kích thước
-    Color3.fromRGB(40,40,50), -- Màu nền
-    16,              -- Kích thước icon
-    Color3.fromRGB(255,255,255), -- Màu icon
-    function() print("Clicked!") end -- Callback
+    parent,                              -- Frame cha
+    "home",                              -- Tên icon
+    nil,                                 -- Vị trí (UDim2, mặc định (0,0,0,0))
+    36,                                  -- Kích thước (mặc định 36)
+    Color3.fromRGB(40, 40, 50),          -- Màu nền
+    16,                                  -- Kích thước icon (mặc định 16)
+    Color3.fromRGB(255, 255, 255),       -- Màu icon
+    function()                           -- Callback khi bấm
+        print("Clicked!")
+    end
 )
+
+-- Hoặc đơn giản hơn:
+local btn = tab:CreateIconButton(parent, "home")
 ```
 
-2. Grid Layout
+2. Grid Layout (Bố cục lưới)
 
 ```lua
 -- Grid ngang
 local grid, layout = tab:CreateHorizontalGrid(
     parent,          -- Frame cha
     4,               -- Số cột
-    UDim2.new(0, 60, 0, 60), -- Kích thước ô
-    UDim2.new(0, 5, 0, 5)    -- Khoảng cách
+    UDim2.new(0, 60, 0, 60), -- Kích thước mỗi ô
+    UDim2.new(0, 5, 0, 5)    -- Khoảng cách giữa các ô
 )
 
 -- Grid dọc
 local grid, layout = tab:CreateVerticalGrid(
-    parent, 2,
+    parent,          -- Frame cha
+    2,               -- Số cột
     UDim2.new(0, 70, 0, 50),
     UDim2.new(0, 10, 0, 5)
 )
 
 -- Grid tùy chỉnh
 local grid, layout = tab:CreateGrid(
-    parent, 3,
+    parent,          -- Frame cha
+    3,               -- Số cột
     UDim2.new(0, 50, 0, 50),
     UDim2.new(0, 5, 0, 5)
 )
 ```
 
-3. Badge
+3. Badge (Huy hiệu)
 
 ```lua
 tab:CreateBadge("12", Color3.fromRGB(255, 50, 50))
@@ -483,7 +520,7 @@ tab:CreateBadge("✓", Color3.fromRGB(50, 255, 50))
 tab:CreateBadge("99+", Color3.fromRGB(255, 200, 50))
 ```
 
-4. Segmented Control
+4. Segmented Control (Thanh chọn)
 
 ```lua
 local seg, buttons = tab:CreateSegmentedControl(
@@ -495,16 +532,17 @@ local seg, buttons = tab:CreateSegmentedControl(
 )
 ```
 
-5. Progress Bar
+5. Progress Bar (Thanh tiến trình)
 
 ```lua
 local bar, update = tab:CreateProgressBar(50, 100)
 
 -- Cập nhật tiến trình
 update(75, 100)
+update(100, 100)
 ```
 
-6. Radio Group
+6. Radio Group (Nhóm radio)
 
 ```lua
 local radio, btns = tab:CreateRadioGroup(
@@ -516,19 +554,19 @@ local radio, btns = tab:CreateRadioGroup(
 )
 ```
 
-7. Card
+7. Card (Thẻ nội dung)
 
 ```lua
-tab:CreateCard("📊 Thông tin", "Nội dung card")
+tab:CreateCard("📊 Thông tin", "Nội dung của card")
 ```
 
-8. Loading Spinner
+8. Loading Spinner (Vòng xoay loading)
 
 ```lua
 local spinner = tab:CreateLoadingSpinner(40)
 
-spinner:Show()   -- Hiển thị
-spinner:Hide()   -- Ẩn
+spinner:Show()    -- Hiển thị
+spinner:Hide()    -- Ẩn
 spinner:Destroy() -- Hủy
 ```
 
@@ -536,7 +574,7 @@ spinner:Destroy() -- Hủy
 
 ✨ Hiệu Ứng
 
-Bật Hiệu Ứng Khi Tạo Window
+Cách Bật Hiệu Ứng Khi Tạo Window
 
 ```lua
 local Window = NoirUI:CreateWindow({
@@ -556,43 +594,46 @@ local Window = NoirUI:CreateWindow({
 Sử Dụng Hiệu Ứng Thủ Công
 
 ```lua
--- Gợn sóng
-CreateRippleEffect(button, Color3.fromRGB(255,255,255), 0.5)
+-- 1. Gợn sóng khi click
+CreateRippleEffect(button, Color3.fromRGB(255, 255, 255), 0.5)
 
--- Nảy
+-- 2. Nảy
 BounceEffect(frame, 20, 0.5)
 
--- Bật lên
+-- 3. Bật lên
 PopEffect(frame, 1.2)
 
--- Rung lắc
+-- 4. Rung lắc
 ShakeEffect(frame, 5, 0.3)
 
--- Trượt vào
+-- 5. Trượt vào
 SlideIn(frame, "left", 0.4)
 
--- Lơ lửng
+-- 6. Lơ lửng
 CreateFloatingAnimation(frame, 5, 1)
 
--- Neon nhấp nháy
-CreateNeonPulse(frame, Color3.fromRGB(255,0,0), 0.3)
+-- 7. Viền neon nhấp nháy
+CreateNeonPulse(frame, Color3.fromRGB(255, 0, 0), 0.3)
 
--- Lỗi GLITCH
+-- 8. Lỗi GLITCH
 CreateGlitchEffect(label, 2)
 
--- Đánh chữ
+-- 9. Đánh chữ
 CreateTypingEffect(label, "Hello World", 0.05)
 
--- Pháo hoa
+-- 10. Pháo hoa
 CreateConfettiBurst(parent, 30)
 
--- Hạt nền
-CreateParticleBackground(parent, Color3.fromRGB(170,85,255), 30)
+-- 11. Hạt nền
+CreateParticleBackground(parent, Color3.fromRGB(170, 85, 255), 30)
 
--- Gradient chuyển động
-CreateMorphingGradient(frame, {Color3.fromRGB(255,0,0), Color3.fromRGB(0,255,0)}, 1)
+-- 12. Gradient chuyển động
+CreateMorphingGradient(frame, {
+    Color3.fromRGB(255, 0, 0),
+    Color3.fromRGB(0, 255, 0)
+}, 1)
 
--- Đập nhịp
+-- 13. Đập nhịp
 CreatePulseEffect(frame, 1.1, 1)
 ```
 
@@ -604,18 +645,22 @@ CreatePulseEffect(frame, 1.1, 1)
 NoirUI:Notify("Tiêu đề", "Nội dung", "icon", "soundType")
 ```
 
-· icon: Tên Lucide hoặc rbxassetid (có thể nil)
+Tham số:
+
+· icon: Tên icon Lucide hoặc rbxassetid (có thể nil)
 · soundType: "Success", "Error", "Notification"
+
+Ví dụ:
 
 ```lua
 -- Thông báo thành công
-NoirUI:Notify("✅ Thành công", "Đã lưu!", "check", "Success")
+NoirUI:Notify("✅ Thành công", "Đã lưu cài đặt!", "check", "Success")
 
 -- Thông báo lỗi
-NoirUI:Notify("❌ Lỗi", "Không thể kết nối!", "x", "Error")
+NoirUI:Notify("❌ Lỗi", "Không thể kết nối server!", "x", "Error")
 
 -- Thông báo thường
-NoirUI:Notify("📢 Thông báo", "Đã cập nhật!", "bell")
+NoirUI:Notify("📢 Thông báo", "Đã cập nhật phiên bản mới!", "bell")
 ```
 
 ---
@@ -629,23 +674,23 @@ BackgroundMusic = {
     Enabled = true,
     AutoPlay = true,
     Volume = 0.3,
-    SingleTrack = 1234567890,
+    SingleTrack = 1234567890,      -- rbxassetid
     Playlist = {123, 456, 789},
-    LoopMode = "single"  -- "single", "playlist", "off"
+    LoopMode = "single"            -- "single", "playlist", "off"
 }
 ```
 
 Điều Khiển
 
 ```lua
-NoirUI:StartMusic()
-NoirUI:PauseMusic()
-NoirUI:ResumeMusic()
-NoirUI:StopMusic()
-NoirUI:SetMusicVolume(0.5)
-NoirUI:AddMusicTrack(1234567890)
-NoirUI:RemoveMusicTrack(1)
-NoirUI:SetMusicLoopMode("playlist")
+NoirUI:StartMusic()                -- Phát nhạc
+NoirUI:PauseMusic()                -- Tạm dừng
+NoirUI:ResumeMusic()               -- Tiếp tục
+NoirUI:StopMusic()                 -- Dừng
+NoirUI:SetMusicVolume(0.5)         -- Âm lượng (0-1)
+NoirUI:AddMusicTrack(1234567890)   -- Thêm vào playlist
+NoirUI:RemoveMusicTrack(1)         -- Xóa theo index
+NoirUI:SetMusicLoopMode("playlist") -- "single", "playlist", "off"
 ```
 
 ---
@@ -668,8 +713,8 @@ NoirUI:SetCustomSound("Success", "...")
 Điều Khiển
 
 ```lua
-NoirUI:ToggleSound(true)
-NoirUI:SetVolume(0.8)
+NoirUI:ToggleSound(true)   -- Bật/tắt âm thanh
+NoirUI:SetVolume(0.8)      -- Âm lượng (0-1)
 ```
 
 ---
@@ -686,20 +731,61 @@ end)
 -- Gõ: hello xin chào
 ```
 
+Ví dụ lệnh nâng cao:
+
+```lua
+NoirUI:RegisterCommand("farm", function(args)
+    local state = args[1] and args[1]:lower() or "toggle"
+    if state == "on" then
+        NoirUI:Notify("Farm", "✅ Đã bật farm!", "zap", "Success")
+    elseif state == "off" then
+        NoirUI:Notify("Farm", "❌ Đã tắt farm!", "zap")
+    else
+        NoirUI:Notify("Farm", "⚠️ Dùng: farm on/off")
+    end
+end)
+
+NoirUI:RegisterCommand("music", function(args)
+    local action = args[1] and args[1]:lower() or "help"
+    if action == "play" then
+        NoirUI:StartMusic()
+        NoirUI:Notify("Nhạc", "▶ Đang phát!", "music", "Success")
+    elseif action == "pause" then
+        NoirUI:PauseMusic()
+        NoirUI:Notify("Nhạc", "⏸ Đã tạm dừng!", "pause")
+    elseif action == "stop" then
+        NoirUI:StopMusic()
+        NoirUI:Notify("Nhạc", "⏹ Đã dừng!", "stop")
+    elseif action == "volume" then
+        local vol = tonumber(args[2])
+        if vol and vol >= 0 and vol <= 100 then
+            NoirUI:SetMusicVolume(vol / 100)
+            NoirUI:Notify("Nhạc", "🔊 Âm lượng: " .. vol .. "%", "volume-2", "Success")
+        else
+            NoirUI:Notify("Nhạc", "⚠️ Dùng: music volume 50", nil, "Error")
+        end
+    else
+        NoirUI:Notify("Nhạc", "⚠️ Các lệnh: play, pause, stop, volume [0-100]")
+    end
+end)
+```
+
 ---
 
 🔄 Undo/Redo
 
 ```lua
--- Lưu state
+-- Lưu state vào history
 Window:PushHistory({ value = "Some value" })
+Window:PushHistory({ count = 10 })
+Window:PushHistory({ enabled = true })
 
--- Undo
+-- Undo (quay lại)
 Window:Undo(function(state)
     print("Undo:", state)
 end)
 
--- Redo
+-- Redo (làm lại)
 Window:Redo(function(state)
     print("Redo:", state)
 end)
@@ -716,8 +802,8 @@ KeySettings = {
     Subtitle = "Vui lòng nhập key",
     Note = "Liên hệ admin để lấy key",
     Key = "mypassword",   -- hoặc {"key1", "key2"}
-    SaveKey = true,
-    FileName = "MyKey"
+    SaveKey = true,       -- lưu vào file
+    FileName = "MyKey"    -- tên file lưu (mặc định "NoirKey")
 }
 ```
 
@@ -725,12 +811,16 @@ KeySettings = {
 
 📱 Minimize
 
-Khi bấm nút —, UI thu gọn từ 420px xuống 350px và hiện Description.
+Khi bấm nút —, UI sẽ:
+
+· Thu gọn từ 420px xuống 350px
+· Hiện Description bên dưới Title
+· Ẩn Sidebar và Content
 
 ```lua
 local Window = NoirUI:CreateWindow({
     Name = "NOIR HUB",
-    Description = "Version 1.0",  -- Hiện khi minimize
+    Description = "Version 1.0",  -- Description hiện khi minimize
 })
 ```
 
@@ -744,15 +834,13 @@ NoirUI:Destroy()
 
 ---
 
-📝 Ví Dụ
-
-Ví Dụ Đầy Đủ
+📝 Ví Dụ Đầy Đủ
 
 ```lua
 -- ============================================
 -- 1. TẢI NOIRUI
 -- ============================================
-local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirGoodBoi/UI/refs/heads/main/ui.lua"))()
+local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirNotFun/NUI/refs/heads/main/ui.lua"))()
 
 -- ============================================
 -- 2. TẠO WINDOW
@@ -816,6 +904,13 @@ farmTab:CreateSlider({
     Callback = function(v) print("Tốc độ farm:", v) end
 })
 
+local combatTab = autoGroup:CreateTab("Chiến Đấu", "sword")
+combatTab:CreateToggle({
+    Name = "Auto Attack",
+    Default = false,
+    Callback = function(s) print("Auto Attack:", s) end
+})
+
 -- ============================================
 -- 5. GROUP 2: CÀI ĐẶT DYNAMIC
 -- ============================================
@@ -838,7 +933,12 @@ uiTab:CreateColorPicker({
 uiTab:CreateSection("🎭 Theme")
 uiTab:CreateDropdown({
     Name = "Chọn Theme",
-    Options = {"default", "demonSlayer", "jujutsuKaisen", "naruto", "attackOnTitan", "onePiece", "myHeroAcademia", "dragonBall", "swordArtOnline", "cyberpunk", "vaporwave"},
+    Options = {
+        "default", "demonSlayer", "jujutsuKaisen",
+        "naruto", "attackOnTitan", "onePiece",
+        "myHeroAcademia", "dragonBall", "swordArtOnline",
+        "cyberpunk", "vaporwave"
+    },
     Default = "default",
     Callback = function(t)
         Window:ApplyTheme(t)
@@ -854,7 +954,7 @@ uiTab:CreateSlider({
     increment = 5,
     Default = 20,
     Callback = function(v)
-        Window:SetBlur(v/100)
+        Window:SetBlur(v / 100)
     end
 })
 
@@ -886,7 +986,7 @@ local grid = gridTab:CreateHorizontalGrid(
 
 local icons = {"home", "settings", "music", "palette", "zap", "sword", "sun", "moon"}
 for _, name in ipairs(icons) do
-    gridTab:CreateIconButton(grid, name, nil, 40, Color3.fromRGB(40,40,55), 18)
+    gridTab:CreateIconButton(grid, name, nil, 40, Color3.fromRGB(40, 40, 55), 18)
 end
 
 -- Progress Bar
@@ -907,8 +1007,8 @@ progTab:CreateButton({
 -- 7. ĐĂNG KÝ LỆNH
 -- ============================================
 NoirUI:RegisterCommand("help", function(args)
-    NoirUI:Notify("📖 Trợ giúp", 
-        "farm on/off - Bật/tắt farm\nmusic play - Phát nhạc\nstats - Thống kê", 
+    NoirUI:Notify("📖 Trợ giúp",
+        "farm on/off - Bật/tắt farm\nmusic play - Phát nhạc\nstats - Thống kê",
         "help-circle")
 end)
 
@@ -920,6 +1020,30 @@ NoirUI:RegisterCommand("farm", function(args)
         NoirUI:Notify("Farm", "❌ Đã tắt!", "zap")
     else
         NoirUI:Notify("Farm", "⚠️ Dùng: farm on/off")
+    end
+end)
+
+NoirUI:RegisterCommand("music", function(args)
+    local action = args[1] and args[1]:lower() or "help"
+    if action == "play" then
+        NoirUI:StartMusic()
+        NoirUI:Notify("Nhạc", "▶ Đang phát!", "music", "Success")
+    elseif action == "pause" then
+        NoirUI:PauseMusic()
+        NoirUI:Notify("Nhạc", "⏸ Đã tạm dừng!", "pause")
+    elseif action == "stop" then
+        NoirUI:StopMusic()
+        NoirUI:Notify("Nhạc", "⏹ Đã dừng!", "stop")
+    elseif action == "volume" then
+        local vol = tonumber(args[2])
+        if vol and vol >= 0 and vol <= 100 then
+            NoirUI:SetMusicVolume(vol / 100)
+            NoirUI:Notify("Nhạc", "🔊 Âm lượng: " .. vol .. "%", "volume-2", "Success")
+        else
+            NoirUI:Notify("Nhạc", "⚠️ Dùng: music volume 50", nil, "Error")
+        end
+    else
+        NoirUI:Notify("Nhạc", "⚠️ Các lệnh: play, pause, stop, volume [0-100]")
     end
 end)
 
@@ -957,6 +1081,7 @@ Icon Tên Icon Tên
 🔒 lock 🔓 unlock
 📝 edit 🗑️ trash
 📤 upload 📥 download
+📊 chart 🔄 rotate-cw
 
 </div>
 
@@ -993,10 +1118,14 @@ Window:CreateTab("🏠 Home", "home")
 Window:PushHistory({ value = someValue })
 
 -- Undo
-Window:Undo(function(state) print(state) end)
+Window:Undo(function(state)
+    print("Undo:", state)
+end)
 
 -- Redo
-Window:Redo(function(state) print(state) end)
+Window:Redo(function(state)
+    print("Redo:", state)
+end)
 ```
 
 3. Tạo Progress Bar Động
@@ -1030,6 +1159,7 @@ local function saveSettings()
     local data = {
         accent = Window:GetAccent(),
         theme = Window:GetCurrentTheme(),
+        blur = 0.2,
     }
     if writefile then
         writefile("settings.json", game:GetService("HttpService"):JSONEncode(data))
@@ -1042,15 +1172,33 @@ local function loadSettings()
         local data = game:GetService("HttpService"):JSONDecode(readfile("settings.json"))
         if data.accent then Window:SetAccent(data.accent) end
         if data.theme then Window:ApplyTheme(data.theme) end
+        if data.blur then Window:SetBlur(data.blur) end
     end
 end
+```
+
+6. Tạo UI Với Hiệu Ứng Đẹp
+
+```lua
+local Window = NoirUI:CreateWindow({
+    Name = "Beautiful UI",
+    UseRipple = true,    -- Gợn sóng khi click
+    UseNeon = true,      -- Viền neon
+    UseParticles = true, -- Hạt nền
+    UseTyping = true,    -- Đánh chữ
+    UseConfetti = true,  -- Pháo hoa
+})
 ```
 
 ---
 
 🔧 Khắc Phục Sự Cố
 
-UI không hiển thị
+Vấn Đề 1: UI không hiển thị
+
+Nguyên nhân: Executor không hỗ trợ CoreGui hoặc lỗi load.
+
+Cách khắc phục:
 
 ```lua
 -- Thử đặt UI vào PlayerGui
@@ -1059,24 +1207,36 @@ if not pcall(function() sc['Parent'] = game:GetService("CoreGui") end) then
 end
 ```
 
-Hiệu ứng không hoạt động
+Vấn Đề 2: Hiệu ứng không hoạt động
+
+Nguyên nhân: Chưa bật hiệu ứng trong settings.
+
+Cách khắc phục:
 
 ```lua
--- Kiểm tra đã bật hiệu ứng trong settings
 local Window = NoirUI:CreateWindow({
-    UseRipple = true,
-    UseNeon = true,
+    UseRipple = true,  -- Phải bật
+    UseNeon = true,    -- Phải bật
 })
 ```
 
-Âm thanh không phát
+Vấn Đề 3: Âm thanh không phát
+
+Nguyên nhân: Executor không hỗ trợ Sound hoặc volume = 0.
+
+Cách khắc phục:
 
 ```lua
 NoirUI:ToggleSound(true)
 NoirUI:SetVolume(1)
+NoirUI:SetCustomSound("Click", "rbxassetid://9120155391")
 ```
 
-Theme không áp dụng
+Vấn Đề 4: Theme không áp dụng
+
+Nguyên nhân: Theme không tồn tại hoặc lỗi tên.
+
+Cách khắc phục:
 
 ```lua
 -- Kiểm tra theme có tồn tại không
@@ -1084,6 +1244,28 @@ if NoirUI.Themes[themeName] then
     Window:ApplyTheme(themeName)
 else
     print("Theme không tồn tại!")
+    -- Hiển thị danh sách theme có sẵn
+    for name, _ in pairs(NoirUI.Themes) do
+        print("- " .. name)
+    end
+end
+```
+
+Vấn Đề 5: Lỗi khi tải UI
+
+Nguyên nhân: Kết nối mạng kém hoặc file bị thay đổi.
+
+Cách khắc phục:
+
+```lua
+-- Sử dụng pcall để bắt lỗi
+local success, err = pcall(function()
+    local NoirUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NoirNotFun/NUI/refs/heads/main/ui.lua"))()
+end)
+
+if not success then
+    warn("Lỗi tải NoirUI:", err)
+    -- Thử load từ backup hoặc retry
 end
 ```
 
@@ -1107,6 +1289,9 @@ MIT License - Free to use and modify.
 
 🌟 Star this repository if you find it useful!
 
-https://img.shields.io/github/stars/NoirGoodBoi/UI?style=social
+https://img.shields.io/github/stars/NoirNotFun/NUI?style=social
+https://img.shields.io/github/forks/NoirNotFun/NUI?style=social
+
+Made with ❤️ by NoirNF
 
 </div>
